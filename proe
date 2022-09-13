@@ -119,6 +119,8 @@ clipr::write_clip(pass_rates)
 
 
 # make figure
+proe <- pass_rates$proe
+proe1 <- pass_rates_1st$proe
 pass_rates %>%
   dplyr::inner_join(pass_rates, by = "posteam") %>%
   ggplot2::ggplot(aes(x = proe, y = proe1)) +
