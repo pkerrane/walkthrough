@@ -9,7 +9,7 @@ library(dplyr)
 library(nflfastR)
  
  
-pbp <- nflfastR::load_pbp(2018:2022)
+pbp <- nflfastR::load_pbp(seasons = 2022)
  
  
 pass_rates <- pbp %>%  
