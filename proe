@@ -9,7 +9,7 @@ library(dplyr)
 library(nflfastR)
  
  
-pbp <- nflfastR::load_pbp(seasons = 2022)
+pbp <- nflfastR::load_pbp(2018:2022)
  
  
 pass_rates <- pbp %>%  
@@ -27,16 +27,6 @@ pass_rates <- pbp %>%
  
 #PROE 1st and 10 full season
 
-# load relevant libraries
- 
-library(tidyverse)
- 
-library(dplyr)
- 
-library(nflfastR)
- 
- 
-pbp <- nflfastR::load_pbp(seasons = 2022)
  
  
 pass_rates_1st <- pbp %>% 
@@ -83,15 +73,9 @@ pass_rates %>%
     x = "PROE",
     y = "PROE on 1st and 10",
     caption = "Data: @nflfastR",
-    title = "Pass Rate over Expected"
+    title = "2018 - 2022 Pass Rate over Expected"
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
     plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold")
-  )
-  
-  
-  
-  
-  
-  
+  ) 
