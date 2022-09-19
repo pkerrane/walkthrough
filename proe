@@ -73,7 +73,7 @@ pass_rates %>%
     x = "PROE",
     y = "PROE on 1st and 10",
     caption = "Data: @nflfastR",
-    title = "2018 - 2022 Pass Rate over Expected"
+    title = "2022 Pass Rate over Expected"
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
