@@ -63,8 +63,8 @@ clipr::write_clip(pass_rates)
 
 
 # make figure
-proe <- pass_rates$proe
-proe1 <- pass_rates_1st$proe
+proe <- pass_rates_w$proe
+proe1 <- pass_rates_1stw$proe
 pass_rates %>%
   dplyr::inner_join(pass_rates, by = "posteam") %>%
   ggplot2::ggplot(aes(x = proe, y = proe1)) +
@@ -81,7 +81,7 @@ pass_rates %>%
     x = "PROE",
     y = "PROE on 1st and 10",
     caption = "Data: @nflfastR",
-    title = "2018 - 2022 Pass Rate over Expected"
+    title = "2022 Week 2 Pass Rate over Expected"
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
