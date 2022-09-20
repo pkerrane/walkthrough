@@ -55,7 +55,7 @@ filter(down == 1, ydstogo == 10, week == 2) %>%
  filter(!is.na(posteam))
 
 
-clipr::write_clip(pass_rates)
+clipr::write_clip(pass_rates_w)
 
 
 
@@ -65,8 +65,8 @@ clipr::write_clip(pass_rates)
 # make figure
 proe <- pass_rates_w$proe
 proe1 <- pass_rates_1stw$proe
-pass_rates %>%
-  dplyr::inner_join(pass_rates, by = "posteam") %>%
+pass_rates_w %>%
+  dplyr::inner_join(pass_rates_w, by = "posteam") %>%
   ggplot2::ggplot(aes(x = proe, y = proe1)) +
   # tier lines
   ggplot2::geom_abline(slope = -1.5, intercept = (4:-3)/10, alpha = .2) +
@@ -81,7 +81,7 @@ pass_rates %>%
     x = "PROE",
     y = "PROE on 1st and 10",
     caption = "Data: @nflfastR",
-    title = "2022 Week 2 Pass Rate over Expected"
+    title = "Week 2 Pass Rate over Expected"
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
