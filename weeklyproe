@@ -81,7 +81,7 @@ pass_rates_w %>%
     x = "PROE",
     y = "PROE on 1st and 10",
     caption = "Data: @nflfastR",
-    title = "Week 2 Pass Rate over Expected"
+    title = "Week 3 Pass Rate over Expected"
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
