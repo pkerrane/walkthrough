@@ -45,15 +45,6 @@ filter(down == 1, ydstogo == 10) %>%
 
 
 
-
-
-clipr::write_clip(pass_rates)
-
-
-
-
-
-
 # make figure
 proe <- pass_rates$proe
 proe1 <- pass_rates_1st$proe
@@ -79,3 +70,7 @@ pass_rates %>%
   ggplot2::theme(
     plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold")
   ) 
+
+
+
+clipr::write_clip(pass_rates)
