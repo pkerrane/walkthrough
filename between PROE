@@ -1,0 +1,89 @@
+#PROE weekly
+#CHANGE FILTER TO RELEVANT WEEK
+
+# load relevant libraries
+ 
+library(tidyverse)
+ 
+library(dplyr)
+ 
+library(nflfastR)
+ 
+ 
+pbp <- nflfastR::load_pbp(seasons = 2022)
+ 
+ 
+pass_rates_w <- pbp %>%
+
+
+#ADJUST
+filter(between(week, 3, 6)) %>% 
+ 
+ add_xpass() %>% 
+ 
+ group_by(posteam) %>% 
+ 
+ summarize(proe = mean(pass_oe, na.rm = TRUE)) %>% 
+ 
+ mutate(proe = proe/100) %>% 
+ 
+ filter(!is.na(posteam))
+ 
+ 
+# PROE Weekly 1st and 10
+ 
+# load relevant libraries
+ 
+library(tidyverse)
+ 
+library(dplyr)
+ 
+library(nflfastR)
+ 
+ 
+pbp <- nflfastR::load_pbp(seasons = 2022)
+ 
+ 
+pass_rates_1stw <- pbp %>% 
+
+# ADJUST
+filter(down == 1, ydstogo == 10, between(week, 3, 6)) %>% 
+ 
+ add_xpass() %>% 
+ 
+ group_by(posteam) %>% 
+ 
+ summarize(proe = mean(pass_oe, na.rm = TRUE)) %>% 
+ 
+ mutate(proe = proe/100) %>% 
+ 
+ filter(!is.na(posteam))
+
+
+
+
+# make figure
+proe <- pass_rates_w$proe
+proe1 <- pass_rates_1stw$proe
+pass_rates_w %>%
+  dplyr::inner_join(pass_rates_w, by = "posteam") %>%
+  ggplot2::ggplot(aes(x = proe, y = proe1)) +
+  # tier lines
+  ggplot2::geom_abline(slope = -1.5, intercept = (4:-3)/10, alpha = .2) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_continuous(labels = scales::percent) +
+ 
+  
+  # nflplotR magic
+  nflplotR::geom_mean_lines(aes(h_var = proe, v_var = proe1)) +
+  nflplotR::geom_nfl_logos(aes(team_abbr = posteam), width = 0.07, alpha = 1.0) +
+  ggplot2::labs(
+    x = "PROE",
+    y = "PROE on 1st and 10",
+    caption = "Data: @nflfastR",
+    title = "Weeks 3 - 6 Pass Rate over Expected"
+  ) +
+  ggplot2::theme_bw() +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold")
+  ) 
