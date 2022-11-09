@@ -13,8 +13,8 @@ library(nflfastR)
 pbp <- nflfastR::load_pbp(seasons = 2022)
  
  
-pass_rates_w <- pbp %>% 
-filter(week == 8) %>% 
+prw <- pbp %>% 
+filter(week == 9) %>% 
  
  add_xpass() %>% 
  
@@ -41,8 +41,8 @@ library(nflfastR)
 pbp <- nflfastR::load_pbp(seasons = 2022)
  
  
-pass_rates_1stw <- pbp %>% 
-filter(down == 1, ydstogo == 10, week == 8) %>% 
+prw_1 <- pbp %>% 
+filter(down == 1, ydstogo == 10, week == 9) %>% 
  
  add_xpass() %>% 
  
@@ -55,7 +55,7 @@ filter(down == 1, ydstogo == 10, week == 8) %>%
  filter(!is.na(posteam))
 
 
-clipr::write_clip(pass_rates_w)
+clipr::write_clip(prw)
 
 
 
@@ -63,10 +63,10 @@ clipr::write_clip(pass_rates_w)
 
 
 # make figure
-proe <- pass_rates_w$proe
-proe1 <- pass_rates_1stw$proe
-pass_rates_w %>%
-  dplyr::inner_join(pass_rates_w, by = "posteam") %>%
+proe <- prw$proe
+proe1 <- prw_1$proe
+prw_1 %>%
+  dplyr::inner_join(prw_1, by = "posteam") %>%
   ggplot2::ggplot(aes(x = proe, y = proe1)) +
   # tier lines
   ggplot2::geom_abline(slope = -1.5, intercept = (4:-3)/10, alpha = .2) +
@@ -81,7 +81,7 @@ pass_rates_w %>%
     x = "PROE",
     y = "PROE on 1st and 10",
     caption = "Data: @nflfastR",
-    title = "Week 8 Pass Rate over Expected"
+    title = "Week 9 Pass Rate over Expected"
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
