@@ -11,7 +11,7 @@ pbp <- load_pbp(2022)
 minplays <- 145
 
 qbs <- pbp %>%
-  filter(season_type == "REG", !is.na(epa)) %>%
+  filter(!is.na(epa)) %>%
   group_by(id, name) %>%
   summarize(
     epa = mean(qb_epa),
@@ -61,8 +61,8 @@ qbs <- pbp %>%
   
   #titles and caption
   labs(x = "Success Rate",
-       y = "EPA per play",
-       title = "2022 EPA per Play and Success Rate",
+       y = "EPA per Game",
+       title = "2022 EPA per Game and Success Rate",
        subtitle = paste0("(bubble size = CPOE, min ", minplays, " plays)"),
        
          
