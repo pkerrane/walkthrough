@@ -59,8 +59,8 @@ pass_rates %>%
   scale_x_continuous(labels = scales::percent_format(accuracy=1),
                      breaks = scales::pretty_breaks(n=8)) + 
   
-   annotate("text", x = x_high -.01, y = y_high, label = "Passing bc of Game Script", fontface = 2, alpha = 1.0, size = 4)+
-  annotate("text", x = x_high -.01, y = y_low, label = "Dictacting the Pass", fontface = 2, alpha = 1.0, size = 4)+
+   annotate("text", x = x_high -.015, y = y_high, label = "Passing bc of Game Script", fontface = 2, alpha = 1.0, size = 4)+
+  annotate("text", x = x_high -.03, y = y_low, label = "Dictacting the Pass", fontface = 2, alpha = 1.0, size = 4)+
   annotate("text", x = x_low + .03, y = y_high, label = "Refusing to Pass", fontface = 2, alpha = 1.0, size = 4)+
   annotate("text", x = x_low + .03, y = y_low, label = "Dictating the Run", fontface = 2, alpha = 1.0, size = 4)+
   
