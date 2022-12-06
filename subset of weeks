@@ -17,7 +17,7 @@ pass_rates_w <- pbp %>%
 
 
 #ADJUST
-filter((week %in% c(7, 8, 9, 10, 11))) %>% 
+filter((week %in% c(12, 13))) %>% 
  
  add_xpass() %>% 
  
@@ -47,7 +47,7 @@ pbp <- nflfastR::load_pbp(seasons = 2022)
 pass_rates_1stw <- pbp %>% 
 
 # ADJUST
-filter(down == 1, ydstogo == 10, (week %in% c(7, 8, 9, 10, 11))) %>% 
+filter(down == 1, ydstogo == 10, (week %in% c(12, 13))) %>% 
  
  add_xpass() %>% 
  
@@ -81,7 +81,7 @@ pass_rates_w %>%
     x = "PROE",
     y = "PROE on 1st and 10",
     caption = "Data: @nflfastR",
-    title = "Weeks 7 - 11 Pass Rate over Expected"
+    title = "Weeks 12 - 13 Pass Rate over Expected"
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
