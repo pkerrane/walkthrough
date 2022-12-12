@@ -10,7 +10,7 @@ pbp <- load_pbp(2022)
 
 minplays <- 140
 
-mrw <- 13
+mrw <- 14
 
 qbs <- pbp %>%
   filter(!is.na(epa)) %>%
