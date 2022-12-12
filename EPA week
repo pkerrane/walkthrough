@@ -8,12 +8,12 @@ options(scipen = 9999)
 
 pbp <- load_pbp(2022)
 
-wk <- 13
+wk <- 14
 
 minplays <- 12
 
 qbs <- pbp %>%
-  filter(week == 13, !is.na(epa)) %>%
+  filter(week == wk, !is.na(epa)) %>%
   group_by(id, name) %>%
   summarize(
     epa = mean(qb_epa),
@@ -64,7 +64,7 @@ qbs <- pbp %>%
   #titles and caption
   labs(x = "Success Rate",
        y = "EPA per Game",
-       title = "2022 EPA per Game and Success Rate",
+       title = "Week 14 EPA per Game and Success Rate",
        subtitle = paste0("(bubble size = CPOE, min ", minplays, " plays)"),
        
          
