@@ -29,7 +29,7 @@ qbs <- pbp %>%
   
   #CHANGE +10 from Weeks 1-10, then +15
   
-  filter(n_dropbacks >= 10 & n_plays >= minplays)
+  filter(n_dropbacks >= 100 & n_plays >= minplays)
   
   load_teams()
   qbs <- qbs %>%
