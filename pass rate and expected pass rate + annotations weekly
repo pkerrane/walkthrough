@@ -70,7 +70,7 @@ pass_rates %>%
     x = "Pass Rate (Includes Scrambles & Sacks)",
     y = "Expected Pass Rate",
     caption = "Figure: @PatKerrane | Data: @nflfastR",
-    title = "Week 13 Pass Rate vs. Expected Pass Rate"
+    title = "Week 15 Pass Rate vs. Expected Pass Rate"
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
