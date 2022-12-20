@@ -12,7 +12,7 @@ library(nflfastR)
 pbp <- nflfastR::load_pbp(seasons = 2022)
  
  
-pass_rates <- pbp %>%  
+ pr <- pbp %>%  
  
  add_xpass() %>% 
  
@@ -29,7 +29,7 @@ pass_rates <- pbp %>%
 
  
  
-pass_rates_1st <- pbp %>% 
+pr1 <- pbp %>% 
 filter(down == 1, ydstogo == 10) %>% 
  
  add_xpass() %>% 
@@ -46,10 +46,10 @@ filter(down == 1, ydstogo == 10) %>%
 
 
 # make figure
-proe <- pass_rates$proe
-proe1 <- pass_rates_1st$proe
-pass_rates %>%
-  dplyr::inner_join(pass_rates, by = "posteam") %>%
+proe <- pr$proe
+proe1 <- pr1$proe
+pr %>%
+  dplyr::inner_join(pr, by = "posteam") %>%
   ggplot2::ggplot(aes(x = proe, y = proe1)) +
   # tier lines
   ggplot2::geom_abline(slope = -1.5, intercept = (4:-3)/10, alpha = .2) +
@@ -73,4 +73,4 @@ pass_rates %>%
 
 
 
-clipr::write_clip(pass_rates)
+clipr::write_clip(pr)
