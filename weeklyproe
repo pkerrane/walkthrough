@@ -42,7 +42,7 @@ pbp <- nflfastR::load_pbp(seasons = 2023)
  
  
 prw_1 <- pbp %>% 
-filter(down == 1, ydstogo == 10, week == 19) %>% 
+filter(down == 1, ydstogo == 10, week == 1) %>% 
  
  add_xpass() %>% 
  
