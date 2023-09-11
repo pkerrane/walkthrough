@@ -9,7 +9,7 @@ library(dplyr)
 library(nflfastR)
  
  
-pbp <- nflfastR::load_pbp(seasons = 2022)
+pbp <- nflfastR::load_pbp(seasons = 2023)
  
  
 pass_rates <- pbp %>%  
@@ -53,10 +53,10 @@ pass_rates %>%
   #nflplotR::geom_median_lines(aes(v_var = pr, h_var = xpr), color = 'black')+
   
   #horizontal line with mean 
-  geom_hline(yintercept = mean(pr), color = "black", linetype = "dashed", alpha=0.5) +
+  geom_hline(yintercept = median(pr), color = "black", linetype = "dashed", alpha=0.5) +
   
   #vertical line with mean
-  geom_vline(xintercept =  mean(xpr), color = "black", linetype = "dashed", alpha=0.5) +
+  geom_vline(xintercept =  median(xpr), color = "black", linetype = "dashed", alpha=0.5) +
        
   nflplotR::geom_nfl_logos(aes(team_abbr = posteam), width = 0.07, alpha = 1.0) +
   
@@ -65,16 +65,16 @@ pass_rates %>%
   scale_x_continuous(labels = scales::percent_format(accuracy=1),
                      breaks = scales::pretty_breaks(n=8)) + 
   
-   annotate("text", x = x_high -.01, y = y_high, label = "Passing bc of Game Script", fontface = 2, alpha = 1.0, size = 4)+
-  annotate("text", x = x_high -.03, y = y_low, label = "Dictacting the Pass", fontface = 2, alpha = 1.0, size = 4)+
-  annotate("text", x = x_low + .03, y = y_high, label = "Refusing to Pass", fontface = 2, alpha = 1.0, size = 4)+
-  annotate("text", x = x_low + .03, y = y_low, label = "Dictating the Run", fontface = 2, alpha = 1.0, size = 4)+
+   annotate("text", x = x_high -.07, y = y_high, label = "Passing bc of Game Script", fontface = 2, alpha = 1.0, size = 6)+
+  annotate("text", x = x_high -.07, y = y_low, label = "Dictacting the Pass", fontface = 2, alpha = 1.0, size = 6)+
+  annotate("text", x = x_low + .08, y = y_high, label = "Refusing to Pass", fontface = 2, alpha = 1.0, size = 6)+
+  annotate("text", x = x_low + .08, y = y_low, label = "Dictating the Run", fontface = 2, alpha = 1.0, size = 6)+
   
   ggplot2::labs(
     x = "Pass Rate (Includes Scrambles & Sacks)",
     y = "Expected Pass Rate",
     caption = "Figure: @PatKerrane | Data: @nflfastR",
-    title = "2022 Pass Rate vs. Expected Pass Rate"
+    title = "2023 Pass Rate vs. Expected Pass Rate"
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
