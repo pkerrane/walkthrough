@@ -10,11 +10,11 @@ library(dplyr)
 library(nflfastR)
  
  
-pbp <- nflfastR::load_pbp(seasons = 2022)
+pbp <- nflfastR::load_pbp(seasons = 2023)
  
  
 prw <- pbp %>% 
-filter(week == 19) %>% 
+filter(week == 1) %>% 
  
  add_xpass() %>% 
  
@@ -38,7 +38,7 @@ library(dplyr)
 library(nflfastR)
  
  
-pbp <- nflfastR::load_pbp(seasons = 2022)
+pbp <- nflfastR::load_pbp(seasons = 2023)
  
  
 prw_1 <- pbp %>% 
@@ -81,7 +81,7 @@ prw_1 %>%
     x = "PROE",
     y = "PROE on 1st and 10",
     caption = "Data: @nflfastR",
-    title = "Week 19 Pass Rate over Expected"
+    title = "Week 1 Pass Rate over Expected"
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
