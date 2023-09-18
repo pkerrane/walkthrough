@@ -6,9 +6,9 @@ library(dplyr)
 
 options(scipen = 9999)
 
-pbp <- load_pbp(2022)
+pbp <- load_pbp(2023)
 
-wk <- 14
+wk <- 2
 
 minplays <- 12
 
@@ -64,7 +64,7 @@ qbs <- pbp %>%
   #titles and caption
   labs(x = "Success Rate",
        y = "EPA per Game",
-       title = "Week 14 EPA per Game and Success Rate",
+       title = "Week 2 EPA per Game and Success Rate",
        subtitle = paste0("(bubble size = CPOE, min ", minplays, " plays)"),
        
          
