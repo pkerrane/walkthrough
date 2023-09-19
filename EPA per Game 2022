@@ -6,11 +6,11 @@ library(dplyr)
 
 options(scipen = 9999)
 
-pbp <- load_pbp(2023)
+pbp <- load_pbp(2022)
 
-minplays <- 25
+minplays <- 220
 
-mrw <- 2
+mrw <- 22
 
 qbs2022 <- pbp %>%
   filter(!is.na(epa)) %>%
