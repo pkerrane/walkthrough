@@ -64,7 +64,7 @@ qbs2022 <- pbp %>%
   #titles and caption
   labs(x = "Success Rate",
        y = "EPA per Game",
-       title = "2023 EPA per Game and Success Rate",
+       title = "2022 EPA per Game and Success Rate",
        subtitle = paste0("(bubble size = CPOE, min ", minplays, " plays)"),
        
          
