@@ -8,9 +8,9 @@ options(scipen = 9999)
 
 pbp <- load_pbp(2023)
 
-wk <- 2
+wk <- 3
 
-minplays <- 12
+minplays <- 15
 
 qbsw <- pbp %>%
   filter(week == wk, !is.na(epa)) %>%
@@ -64,7 +64,7 @@ qbsw <- pbp %>%
   #titles and caption
   labs(x = "Success Rate",
        y = "EPA per Game",
-       title = "Week 2 EPA per Game and Success Rate",
+       title = "Week 3 EPA per Game and Success Rate",
        subtitle = paste0("(bubble size = CPOE, min ", minplays, " plays)"),
        
          
