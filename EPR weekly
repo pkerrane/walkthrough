@@ -12,7 +12,7 @@ library(nflfastR)
 pbp <- nflfastR::load_pbp(seasons = 2023)
  
  
-pass_rates <- pbp %>% 
+pass_rates_w <- pbp %>% 
 
 filter(week == 3) %>% 
  
@@ -27,23 +27,23 @@ filter(week == 3) %>%
  filter(!is.na(posteam))
  
 colnms=c("proe", "xpr")
-pass_rates$pr <- rowSums(pass_rates[,colnms])
+pass_rates_w$pr <- rowSums(pass_rates_w[,colnms])
 
 
-x_midpoint <- (max(pass_rates$pr) + min(pass_rates$pr)) / 2
-x_high <- (max(pass_rates$pr)) 
-x_low <- (min(pass_rates$pr))
+x_midpoint <- (max(pass_rates_w$pr) + min(pass_rates_w$pr)) / 2
+x_high <- (max(pass_rates_w$pr)) 
+x_low <- (min(pass_rates_w$pr))
 
-y_midpoint <- (max(pass_rates$xpr) + min(pass_rates$xpr)) / 2
-y_high <- (max(pass_rates$xpr))
-y_low <- (min(pass_rates$xpr))
+y_midpoint <- (max(pass_rates_w$xpr) + min(pass_rates_w$xpr)) / 2
+y_high <- (max(pass_rates_w$xpr))
+y_low <- (min(pass_rates_w$xpr))
 
 
 # make figure
-pr <- pass_rates$pr
-xpr <- pass_rates$xpr
-pass_rates %>%
-  dplyr::inner_join(pass_rates, by = "posteam") %>%
+pr <- pass_rates_w$pr
+xpr <- pass_rates_w$xpr
+pass_rates_w %>%
+  dplyr::inner_join(pass_rates_w, by = "posteam") %>%
   ggplot2::ggplot(aes(x = pr, y = xpr)) +
 
  
