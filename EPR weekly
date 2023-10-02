@@ -10,11 +10,11 @@ library(nflfastR)
  
  
 pbp <- nflfastR::load_pbp(seasons = 2023)
- 
+wk <- 4 
  
 pass_rates_w <- pbp %>% 
 
-filter(week == 4) %>% 
+filter(week == wk) %>% 
  
  add_xpass() %>% 
  
@@ -72,10 +72,11 @@ pass_rates_w %>%
     x = "Pass Rate (Includes Scrambles & Sacks)",
     y = "Expected Pass Rate",
     caption = "Figure: @PatKerrane | Data: @nflfastR",
-    title = "Week 4 Pass Rate vs. Expected Pass Rate"
+    title = paste0("Week ", wk, " Pass Rate vs. Expected Pass Rate")
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
     plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold")
   ) 
 
+clipr::write_clip(pass_rates_w)
