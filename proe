@@ -43,7 +43,7 @@ filter(down == 1, ydstogo == 10) %>%
  filter(!is.na(posteam))
  
 
-
+pr$pr1 <- pr1$proe
 
 # make figure
 proe <- pr$proe
