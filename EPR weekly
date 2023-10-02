@@ -14,7 +14,7 @@ pbp <- nflfastR::load_pbp(seasons = 2023)
  
 pass_rates_w <- pbp %>% 
 
-filter(week == 3) %>% 
+filter(week == 4) %>% 
  
  add_xpass() %>% 
  
@@ -72,7 +72,7 @@ pass_rates_w %>%
     x = "Pass Rate (Includes Scrambles & Sacks)",
     y = "Expected Pass Rate",
     caption = "Figure: @PatKerrane | Data: @nflfastR",
-    title = "Week 3 Pass Rate vs. Expected Pass Rate"
+    title = "Week 4 Pass Rate vs. Expected Pass Rate"
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
