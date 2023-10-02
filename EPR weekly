@@ -10,7 +10,7 @@ library(nflfastR)
  
  
 pbp <- nflfastR::load_pbp(seasons = 2023)
-wk <- 4 
+wk <- 4
  
 pass_rates_w <- pbp %>% 
 
@@ -25,9 +25,27 @@ filter(week == wk) %>%
  mutate(proe = proe/100) %>%
  
  filter(!is.na(posteam))
+
+
+
+prw1 <- pbp %>% 
+filter(down == 1, ydstogo == 10, week == wk) %>% 
+ 
+ add_xpass() %>% 
+ 
+ group_by(posteam) %>% 
+ 
+ summarize(proe = mean(pass_oe, na.rm = TRUE)) %>% 
+ 
+ mutate(proe = proe/100) %>% 
+ 
+ filter(!is.na(posteam))
+
+
  
 colnms=c("proe", "xpr")
 pass_rates_w$pr <- rowSums(pass_rates_w[,colnms])
+pass_rates_w$proe1 <- prw1$proe
 
 
 x_midpoint <- (max(pass_rates_w$pr) + min(pass_rates_w$pr)) / 2
