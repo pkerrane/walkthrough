@@ -10,7 +10,7 @@ pbp <- load_pbp(2023)
 
 wk <- 4
 
-minplays <- 15
+minplays <- 10
 
 qbsw <- pbp %>%
   filter(week == wk, !is.na(epa)) %>%
@@ -29,7 +29,7 @@ qbsw <- pbp %>%
   
   #CHANGE +10 from Weeks 1-10, then +15
   
-  filter(n_dropbacks >= 2 & n_plays >= minplays)
+  filter(n_dropbacks >= 5 & n_plays >= minplays)
   
   load_teams()
   qbsw <- qbsw %>%
