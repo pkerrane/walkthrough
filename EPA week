@@ -64,7 +64,7 @@ qbsw <- pbp %>%
   #titles and caption
   labs(x = "Success Rate",
        y = "EPA per Game",
-       title = "Week 3 EPA per Game and Success Rate",
+       title = "Week 4 EPA per Game and Success Rate",
        subtitle = paste0("(bubble size = CPOE, min ", minplays, " plays)"),
        
          
