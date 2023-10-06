@@ -1,0 +1,102 @@
+
+#ALL PROE
+
+# load relevant libraries
+ 
+library(tidyverse)
+ 
+library(dplyr)
+ 
+library(nflfastR)
+ 
+ 
+pbp <- nflfastR::load_pbp(seasons = 2023)
+ 
+ 
+pass_rates_sub <- pbp %>%  
+
+
+filter((week %in% c(1, 2, 4))) %>% 
+ 
+ add_xpass() %>% 
+ 
+ group_by(posteam) %>% 
+ 
+ summarize(proe = mean(pass_oe, na.rm = TRUE), xpr = mean(xpass, na.rm = TRUE)) %>% 
+ 
+ mutate(proe = proe/100) %>%
+ 
+ filter(!is.na(posteam))
+
+prw1_sub <- pbp %>% 
+filter(down == 1, ydstogo == 10, week == wk) %>% 
+ 
+ add_xpass() %>% 
+ 
+ group_by(posteam) %>% 
+ 
+ summarize(proe = mean(pass_oe, na.rm = TRUE)) %>% 
+ 
+ mutate(proe = proe/100) %>% 
+ 
+ filter(!is.na(posteam))
+
+
+ 
+colnms=c("proe", "xpr")
+pass_rates_sub$pr <- rowSums(pass_rates_sub[,colnms])
+pass_rates_sub$proe1 <- prw1_sub$proe
+
+
+x_midpoint <- (max(pass_rates_sub$pr) + min(pass_rates_sub$pr)) / 2
+x_high <- (max(pass_rates_sub$pr)) 
+x_low <- (min(pass_rates_sub$pr))
+
+y_midpoint <- (max(pass_rates_sub$xpr) + min(pass_rates_sub$xpr)) / 2
+y_high <- (max(pass_rates_sub$xpr))
+y_low <- (min(pass_rates_sub$xpr))
+
+
+# make figure
+pr <- pass_rates_sub$pr
+xpr <- pass_rates_sub$xpr
+pass_rates_sub %>%
+  dplyr::inner_join(pass_rates_sub, by = "posteam") %>%
+  ggplot2::ggplot(aes(x = pr, y = xpr)) +
+
+ 
+  
+  # nflplotR magic
+  
+ 
+  
+  #nflplotR::geom_median_lines(aes(v_var = pr, h_var = xpr), color = 'black')+
+  
+  #horizontal line with mean 
+  geom_hline(yintercept = median(pr), color = "black", linetype = "dashed", alpha=0.5) +
+  
+  #vertical line with mean
+  geom_vline(xintercept =  median(xpr), color = "black", linetype = "dashed", alpha=0.5) +
+       
+  nflplotR::geom_nfl_logos(aes(team_abbr = posteam), width = 0.07, alpha = 1.0) +
+  
+  scale_y_continuous(labels = scales::percent_format(accuracy=1),
+                     breaks = scales::pretty_breaks(n=8)) + 
+  scale_x_continuous(labels = scales::percent_format(accuracy=1),
+                     breaks = scales::pretty_breaks(n=8)) + 
+  
+   annotate("text", x = x_high -.07, y = y_high, label = "Passing in Passing Game Scripts", fontface = 2, alpha = 1.0, size = 6)+
+  annotate("text", x = x_high -.07, y = y_low, label = "Dictacting the Pass", fontface = 2, alpha = 1.0, size = 6)+
+  annotate("text", x = x_low + .08, y = y_high, label = "Refusing to Pass", fontface = 2, alpha = 1.0, size = 6)+
+  annotate("text", x = x_low + .08, y = y_low, label = "Dictating the Run", fontface = 2, alpha = 1.0, size = 6)+
+  
+  ggplot2::labs(
+    x = "Pass Rate (Includes Scrambles & Sacks)",
+    y = "Expected Pass Rate",
+    caption = "Figure: @PatKerrane | Data: @nflfastR",
+    title = "Pass Rate vs. Expected Pass Rate (Weeks 1,2 & 4)"
+  ) +
+  ggplot2::theme_bw() +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold")
+  ) 
