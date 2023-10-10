@@ -23,10 +23,24 @@ pass_rates <- pbp %>%
  mutate(proe = proe/100) %>%
  
  filter(!is.na(posteam))
+
+proe1 <- pbp %>% 
+filter(down == 1, ydstogo == 10) %>% 
+ 
+ add_xpass() %>% 
+ 
+ group_by(posteam) %>% 
+ 
+ summarize(proe = mean(pass_oe, na.rm = TRUE)) %>% 
+ 
+ mutate(proe = proe/100) %>% 
+ 
+ filter(!is.na(posteam))
+
  
 colnms=c("proe", "xpr")
 pass_rates$pr <- rowSums(pass_rates[,colnms])
-
+pass_rates$proe1 <- proe1$proe
 
 x_midpoint <- (max(pass_rates$pr) + min(pass_rates$pr)) / 2
 x_high <- (max(pass_rates$pr)) 
@@ -81,4 +95,5 @@ pass_rates %>%
     plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold")
   ) 
 
+clipr::write_clip(pass_rates)
 
