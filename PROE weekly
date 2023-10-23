@@ -11,7 +11,7 @@ library(nflfastR)
  
  
 pbp <- nflfastR::load_pbp(seasons = 2023)
-wk <- 6
+wk <- 7
  
 prw <- pbp %>% 
 filter(week == wk) %>% 
