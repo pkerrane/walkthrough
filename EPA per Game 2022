@@ -16,13 +16,14 @@ qbs2022 <- pbp %>%
   filter(!is.na(epa)) %>%
   group_by(id, name) %>%
   summarize(
-    epa = mean(qb_epa),
+    epa = mean(qb_epa, na.rm = T),
     cpoe = mean(cpoe, na.rm = T),
-    sr = mean(success),
+    sr = mean(success, na.rm = T),
     g = length(unique(game_id)),
-    n_dropbacks = sum(pass),
+    n_dropbacks = sum(pass, na.rm = T),
     n_plays = n(),
     epa_g = epa * n_plays / g,
+    rush_g = sum(rushing_yards, na.rm = T) / g,
     team = last(posteam)
   ) %>%
   ungroup() %>%
