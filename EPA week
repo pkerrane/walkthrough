@@ -84,4 +84,4 @@ qbsw <- pbp %>%
   #make ticks look nice
   #if this doesn't work, `install.packages('scales')`
   scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 10))
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10), labels = scales::percent_format(accuracy = 1))
