@@ -59,7 +59,7 @@ pr %>%
   
   # nflplotR magic
   nflplotR::geom_mean_lines(aes(h_var = proe, v_var = proe1)) +
-  nflplotR::geom_nfl_logos(aes(team_abbr = posteam), width = 0.07, alpha = 1.0) +
+  nflplotR::geom_nfl_logos(aes(team_abbr = posteam), width = 0.07, alpha = 0.92) +
   ggplot2::labs(
     x = "PROE",
     y = "PROE on 1st and 10",
