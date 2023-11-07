@@ -10,7 +10,7 @@ library(nflfastR)
  
  
 pbp <- nflfastR::load_pbp(seasons = 2023)
-wk <- 8
+wk <- 9
  
 pass_rates_w <- pbp %>% 
 
