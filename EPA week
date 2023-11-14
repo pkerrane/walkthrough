@@ -8,9 +8,9 @@ options(scipen = 9999)
 
 pbp <- load_pbp(2023)
 
-wk <- 9
+wk <- 10
 
-minplays <- 13
+minplays <- 11
 
 qbsw <- pbp %>%
   filter(week == wk, !is.na(epa)) %>%
