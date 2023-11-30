@@ -1,0 +1,20 @@
+library(tidyverse)
+library(ggrepel)
+library(nflreadr)
+library(nflplotR)
+library(dplyr)
+
+options(scipen = 9999)
+
+pbp <- load_pbp(2023)
+
+minplays <- 1
+
+
+splash_zone <- pbp %>%
+
+filter(air_yards >= 10, pass_location == "middle")
+ 
+splash_zone_data <- nflfastR::calculate_player_stats(splash_zone)
+
+clipr::write_clip(splash_zone_data)
