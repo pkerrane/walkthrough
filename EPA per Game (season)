@@ -8,7 +8,8 @@ options(scipen = 9999)
 
 pbp <- load_pbp(2023)
 
-minplays <- 55
+minplays <- 48
+dbs <- 48
 
 
 qbs <- pbp %>%
@@ -29,7 +30,7 @@ qbs <- pbp %>%
   
   #CHANGE +10 from Weeks 1-10, then +15
   
-  filter(n_dropbacks >= 12 & n_plays >= minplays)
+  filter(n_dropbacks >= dbs & n_plays >= minplays)
   
   load_teams()
   qbs <- qbs %>%
