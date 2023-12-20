@@ -11,7 +11,7 @@ library(nflfastR)
  
  
 pbp <- nflfastR::load_pbp(seasons = 2023)
-wk <- 14
+wk <- 15
  
 prw <- pbp %>% 
 filter(week == wk) %>% 
@@ -75,7 +75,12 @@ prw_1 %>%
  
   
   # nflplotR magic
-  nflplotR::geom_mean_lines(aes(h_var = proe, v_var = proe1)) +
+
+  geom_hline(yintercept = mean(proe), color = "black", linetype = "dashed", alpha=0.5) +
+  
+  #vertical line with mean
+  geom_vline(xintercept =  mean(proe1), color = "black", linetype = "dashed", alpha=0.5) +
+
   nflplotR::geom_nfl_logos(aes(team_abbr = posteam), width = 0.07, alpha = 1.0) +
   ggplot2::labs(
     x = "PROE",
