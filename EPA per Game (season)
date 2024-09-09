@@ -6,10 +6,10 @@ library(dplyr)
 
 options(scipen = 9999)
 
-pbp <- load_pbp(2023)
+pbp <- load_pbp(2024)
 
-minplays <- 95
-dbs <- 95
+minplays <- 10
+dbs <- 10
 
 
 qbs <- pbp %>%
