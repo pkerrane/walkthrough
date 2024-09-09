@@ -88,7 +88,7 @@ pass_rates %>%
     x = "Pass Rate (Includes Scrambles & Sacks)",
     y = "Expected Pass Rate",
     caption = "Figure: @PatKerrane | Data: @nflfastR",
-    title = "2023 Pass Rate vs. Expected Pass Rate"
+    title = "2024 Pass Rate vs. Expected Pass Rate"
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
