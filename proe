@@ -9,7 +9,7 @@ library(dplyr)
 library(nflfastR)
  
  
-pbp <- nflfastR::load_pbp(seasons = 2023)
+pbp <- nflfastR::load_pbp(seasons = 2024)
  
  
  pr <- pbp %>%  
@@ -71,7 +71,7 @@ pr %>%
     x = "PROE",
     y = "PROE on 1st and 10",
     caption = "Data: @nflfastR",
-    title = "2023 Pass Rate over Expected"
+    title = "2024 Pass Rate over Expected"
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
