@@ -64,13 +64,13 @@ pass_rates %>%
   
  
   
-  #nflplotR::geom_median_lines(aes(v_var = pr, h_var = xpr), color = 'black')+
+  #nflplotR::geom_mean_lines(aes(v_var = pr, h_var = xpr), color = 'black')+
   
   #horizontal line with mean 
-  geom_hline(yintercept = median(pr), color = "black", linetype = "dashed", alpha=0.5) +
+  geom_hline(yintercept = mean(pr), color = "black", linetype = "dashed", alpha=0.5) +
   
   #vertical line with mean
-  geom_vline(xintercept =  median(xpr), color = "black", linetype = "dashed", alpha=0.5) +
+  geom_vline(xintercept =  mean(xpr), color = "black", linetype = "dashed", alpha=0.5) +
        
   nflplotR::geom_nfl_logos(aes(team_abbr = posteam), width = 0.07, alpha = 1.0) +
   
