@@ -10,7 +10,7 @@ pbp <- load_pbp(2024)
 
 wk <- 9
 
-minplays <- 9
+minplays <- 10
 
 qbsw <- pbp %>%
   filter(week == wk, !is.na(epa)) %>%
