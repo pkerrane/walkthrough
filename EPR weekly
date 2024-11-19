@@ -10,7 +10,7 @@ library(nflfastR)
  
  
 pbp <- nflfastR::load_pbp(seasons = 2024)
-wk <- 10
+wk <- 11
  
 pass_rates_w <- pbp %>% 
 
