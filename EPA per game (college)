@@ -1,0 +1,16 @@
+library(ggrepel)
+epag <- read.csv("QB Propsects - EPA_G.csv", header = TRUE, sep = ",")
+ggplot(epag, aes(x = Career_EPA_Game, y = Peak_EPA_Game, label = Player)) +
+  geom_point() +                          # Adds points to the plot
+  geom_text(vjust = -0.5) +               # Adds labels to the points
+  labs(title = "Career EPA and Peak EPA", # Adds a title
+       x = "Career EPA perGame", 
+       y = "Peak EPA per Game") +
+   theme_bw() +
+    theme(
+    plot.title = element_text(size = 14, hjust = 0.5, face = "bold"))+
+  geom_point(size = 3, color = "grey") +
+  geom_hline(yintercept = mean(epag$Peak_EPA_Game), color = "black", linetype = "dashed", alpha=0.5) +
+  geom_vline(xintercept =  mean(epag$Career_EPA_Game), color = "black", linetype = "dashed", alpha=0.5) +
+  stat_smooth(geom='line', alpha=0.5, se=FALSE, method='lm')+
+  theme_minimal()  
