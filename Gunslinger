@@ -1,0 +1,50 @@
+library(ggplot2)
+library(ggrepel)
+library(scales)
+
+# Read the data
+gs <- read.csv("QB Propsects - GS.csv", header = TRUE, sep = ",")
+
+# Fit a linear model
+lm_model <- lm(GS ~ Draft, data = gs)
+gs$Predicted <- predict(lm_model)
+
+# Calculate residuals
+gs$Residual <- gs$GS - gs$Predicted  # Actual - Predicted
+
+# Normalize the residuals for color scaling
+gs$ColorScale <- scales::rescale(gs$Residual, to = c(-1, 1))
+
+ggplot(gs, aes(x = Draft, y = GS, label = Name, color = ColorScale)) +
+  geom_point(size = 5) +
+  scale_color_gradient2(
+    low = "red", 
+    mid = "#CCCC00", 
+    high = "#005500", 
+    midpoint = 0, 
+    na.value = "grey",
+    name = "Legend",
+    breaks = c(-1, 0, 1),  
+    labels = c("Risk", "Neutral", "Upside")  
+  ) +
+  geom_text_repel(size = 3, vjust = -0.5) +
+  labs(title = "Gunslinger Index vs. Draft Capital", x = "Draft Capital", y = "Gunslinger Index") +
+  theme(
+    panel.background = element_rect(fill = "gray30"),  # Set background color
+    plot.background = element_rect(fill = "gray30"),    # Set plot background color
+    plot.title = element_text(size = 14, hjust = 0.5, face = "bold", vjust = 1.5),
+    plot.margin = margin(t = 15, r = 15, b = 15, l = 15),
+    panel.grid.major = element_blank(),  # Remove gridlines
+    panel.grid.minor = element_blank()
+  ) +
+  # Intercept lines
+  geom_hline(yintercept = mean(gs$GS), color = "black", linetype = "dashed", alpha = 0.5) +
+  geom_vline(xintercept = mean(gs$Draft), color = "black", linetype = "dashed", alpha = 0.5) +
+  # Single overall line of best fit in black
+  stat_smooth(method = 'lm', se = FALSE, color = "black", alpha = 0.5) +
+  theme_minimal() +
+  # Add annotations in the top right corner
+  annotate("text", x = Inf, y = Inf, label = "@PatKerrane\n@LegendaryUpside", 
+           hjust = 1.1, vjust = 2, size = 4, color = "black")  # Adjust size and justification
+
+# Print the plot
