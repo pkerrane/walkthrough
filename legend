@@ -6,16 +6,16 @@ library(scales)
 li <- read.csv("RB Model - legend.csv", header = TRUE, sep = ",")
 
 # Fit a linear model
-lm_model <- lm(legend ~ Draft, data = li)
+lm_model <- lm(Legend ~ Draft, data = li)
 li$Predicted <- predict(lm_model)
 
 # Calculate residuals
-li$Residual <- li$legend - li$Predicted  # Actual - Predicted
+li$Residual <- li$Legend - li$Predicted  # Actual - Predicted
 
 # Normalize the residuals for color scaling
 li$ColorScale <- scales::rescale(li$Residual, to = c(-1, 1))
 
-ggplot(li, aes(x = Draft, y = legend, label = Player, color = ColorScale)) +  # Change 'Name' to 'Player'
+ggplot(li, aes(x = Draft, y = Legend, label = Player, color = ColorScale)) +  # Change 'Name' to 'Player'
   geom_point(size = 5) +
   scale_color_gradient2(
     low = "red", 
@@ -28,7 +28,7 @@ ggplot(li, aes(x = Draft, y = legend, label = Player, color = ColorScale)) +  # 
     labels = c("Risk", "Neutral", "Upside")  
   ) +
   geom_text_repel(size = 3, vjust = -0.5) +
-  labs(title = "legend Index vs. Draft Capital", x = "Draft Capital", y = "legend Index") +
+  labs(title = "Legend Index vs. Draft Capital", x = "Draft Capital", y = "Legend Index") +
   theme(
     panel.background = element_rect(fill = "gray30"),  # Set background color
     plot.background = element_rect(fill = "gray30"),    # Set plot background color
@@ -38,7 +38,7 @@ ggplot(li, aes(x = Draft, y = legend, label = Player, color = ColorScale)) +  # 
     panel.grid.minor = element_blank()
   ) +
   # Intercept lines
-  geom_hline(yintercept = mean(li$legend), color = "black", linetype = "dashed", alpha = 0.5) +
+  geom_hline(yintercept = mean(li$Legend), color = "black", linetype = "dashed", alpha = 0.5) +
   geom_vline(xintercept = mean(li$Draft), color = "black", linetype = "dashed", alpha = 0.5) +
   # Single overall line of best fit in black
   stat_smooth(method = 'lm', se = FALSE, color = "black", alpha = 0.5) +
