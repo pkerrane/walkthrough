@@ -3,19 +3,19 @@ library(ggrepel)
 library(scales)
 
 # Read the data
-wi <- read.csv("RB Model - Weapon.csv", header = TRUE, sep = ",")
+li <- read.csv("RB Model - legend.csv", header = TRUE, sep = ",")
 
 # Fit a linear model
-lm_model <- lm(Weapon ~ Draft, data = wi)
-wi$Predicted <- predict(lm_model)
+lm_model <- lm(legend ~ Draft, data = li)
+li$Predicted <- predict(lm_model)
 
 # Calculate residuals
-wi$Residual <- wi$Weapon - wi$Predicted  # Actual - Predicted
+li$Residual <- li$legend - li$Predicted  # Actual - Predicted
 
 # Normalize the residuals for color scaling
-wi$ColorScale <- scales::rescale(wi$Residual, to = c(-1, 1))
+li$ColorScale <- scales::rescale(li$Residual, to = c(-1, 1))
 
-ggplot(wi, aes(x = Draft, y = Weapon, label = Player, color = ColorScale)) +  # Change 'Name' to 'Player'
+ggplot(li, aes(x = Draft, y = legend, label = Player, color = ColorScale)) +  # Change 'Name' to 'Player'
   geom_point(size = 5) +
   scale_color_gradient2(
     low = "red", 
@@ -28,7 +28,7 @@ ggplot(wi, aes(x = Draft, y = Weapon, label = Player, color = ColorScale)) +  # 
     labels = c("Risk", "Neutral", "Upside")  
   ) +
   geom_text_repel(size = 3, vjust = -0.5) +
-  labs(title = "Weapon Index vs. Draft Capital", x = "Draft Capital", y = "Weapon Index") +
+  labs(title = "legend Index vs. Draft Capital", x = "Draft Capital", y = "legend Index") +
   theme(
     panel.background = element_rect(fill = "gray30"),  # Set background color
     plot.background = element_rect(fill = "gray30"),    # Set plot background color
@@ -38,8 +38,8 @@ ggplot(wi, aes(x = Draft, y = Weapon, label = Player, color = ColorScale)) +  # 
     panel.grid.minor = element_blank()
   ) +
   # Intercept lines
-  geom_hline(yintercept = mean(wi$Weapon), color = "black", linetype = "dashed", alpha = 0.5) +
-  geom_vline(xintercept = mean(wi$Draft), color = "black", linetype = "dashed", alpha = 0.5) +
+  geom_hline(yintercept = mean(li$legend), color = "black", linetype = "dashed", alpha = 0.5) +
+  geom_vline(xintercept = mean(li$Draft), color = "black", linetype = "dashed", alpha = 0.5) +
   # Single overall line of best fit in black
   stat_smooth(method = 'lm', se = FALSE, color = "black", alpha = 0.5) +
   theme_minimal() +
