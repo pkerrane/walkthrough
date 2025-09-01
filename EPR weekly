@@ -9,8 +9,8 @@ library(dplyr)
 library(nflfastR)
  
  
-pbp <- nflfastR::load_pbp(seasons = 2024)
-wk <- 16
+pbp <- nflfastR::load_pbp(seasons = 2025)
+wk <- 1
  
 pass_rates_w <- pbp %>% 
 
