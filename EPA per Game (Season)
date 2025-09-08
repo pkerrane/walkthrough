@@ -6,10 +6,10 @@ library(dplyr)
 
 options(scipen = 9999)
 
-pbp <- load_pbp(2024)
+pbp <- load_pbp(2025)
 
-minplays <- 250
-dbs <- 250
+minplays <- 10
+dbs <- 10
 
 
 qbs <- pbp %>%
@@ -65,7 +65,7 @@ qbs <- pbp %>%
   #titles and caption
   labs(x = "Success Rate",
        y = "EPA per Game",
-       title = "2024 EPA per Game and Success Rate",
+       title = "2025 EPA per Game and Success Rate",
        subtitle = paste0("(bubble size = CPOE, min ", minplays, " plays)"),
        
          
