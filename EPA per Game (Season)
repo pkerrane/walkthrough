@@ -6,10 +6,10 @@ library(dplyr)
 
 options(scipen = 9999)
 
-pbp <- load_pbp(2025)
+pbp <- load_pbp(2024)
 
-minplays <- 10
-dbs <- 10
+minplays <- 250
+dbs <- 250
 
 
 qbs <- pbp %>%
@@ -43,10 +43,10 @@ qbs <- pbp %>%
   ggplot(aes(x = sr, y = epa_g)) +
   
   #horizontal line with mean EPA
-  geom_hline(yintercept = mean(qbs$epa_g), color = "black", linetype = "dashed", alpha=0.5) +
+  geom_hline(yintercept = 0, color = "black", linetype = "dashed", alpha=0.5) +
   
   #vertical line with mean CPOE
-  geom_vline(xintercept =  mean(qbs$sr), color = "black", linetype = "dashed", alpha=0.5) +
+  geom_vline(xintercept = .45, color = "black", linetype = "dashed", alpha=0.5) +
   
   #add points for the QBs with the right colors
   #cex controls point size and alpha the transparency (alpha = 1 is normal)
@@ -65,7 +65,7 @@ qbs <- pbp %>%
   #titles and caption
   labs(x = "Success Rate",
        y = "EPA per Game",
-       title = "2025 EPA per Game and Success Rate",
+       title = "2024 EPA per Game and Success Rate",
        subtitle = paste0("(bubble size = CPOE, min ", minplays, " plays)"),
        
          
