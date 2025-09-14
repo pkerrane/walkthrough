@@ -6,9 +6,9 @@ library(dplyr)
 
 options(scipen = 9999)
 
-pbp <- load_pbp(2024)
+pbp <- load_pbp(2025)
 
-wk <- 14
+wk <- 2
 
 minplays <- 10
 
