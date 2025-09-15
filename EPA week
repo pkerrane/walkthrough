@@ -43,10 +43,10 @@ qbsw <- pbp %>%
   ggplot(aes(x = sr, y = epa_g)) +
   
   #horizontal line with mean EPA
-  geom_hline(yintercept = mean(qbsw$epa_g), color = "black", linetype = "dashed", alpha=0.5) +
+  geom_hline(yintercept = 0, color = "black", linetype = "dashed", alpha=0.5) +
   
   #vertical line with mean CPOE
-  geom_vline(xintercept =  mean(qbsw$sr), color = "black", linetype = "dashed", alpha=0.5) +
+  geom_vline(xintercept =  .45, color = "black", linetype = "dashed", alpha=0.5) +
   
   #add points for the QBs with the right colors
   #cex controls point size and alpha the transparency (alpha = 1 is normal)
