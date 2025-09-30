@@ -10,7 +10,7 @@ library(nflfastR)
  
  
 pbp <- nflfastR::load_pbp(seasons = 2025)
-wk <- 4
+wk <- 5
  
 pass_rates_w <- pbp %>% 
 
@@ -71,7 +71,7 @@ pass_rates_w %>%
   #nflplotR::geom_mean_lines(aes(v_var = pr, h_var = xpr), color = 'black')+
   
   #horizontal line with mean 
-  geom_hline(yintercept = mean(pr), color = "black", linetype = "dashed", alpha=0.5) +
+  geom_hline(yintercept = mean(xpr), color = "black", linetype = "dashed", alpha=0.5) +
   
   #vertical line with mean
   geom_vline(xintercept =  mean(pr), color = "black", linetype = "dashed", alpha=0.5) +
