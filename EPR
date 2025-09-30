@@ -67,7 +67,7 @@ pass_rates %>%
   #nflplotR::geom_mean_lines(aes(v_var = pr, h_var = xpr), color = 'black')+
   
   #horizontal line with mean 
-  geom_hline(yintercept = mean(pr), color = "black", linetype = "dashed", alpha=0.5) +
+  geom_hline(yintercept = mean(xpr), color = "black", linetype = "dashed", alpha=0.5) +
   
   #vertical line with mean - should be PR but changed to xpr for consistency
   geom_vline(xintercept =  mean(pr), color = "black", linetype = "dashed", alpha=0.5) +
