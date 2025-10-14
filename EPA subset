@@ -6,16 +6,16 @@ library(dplyr)
 
 options(scipen = 9999)
 
-pbp <- load_pbp(2024)
+pbp <- load_pbp(2025)
 
-minplays <- 40
-dbs <- 45
+minplays <- 15
+dbs <- 15
 
 
 qbs_s <- pbp %>%
   filter(!is.na(epa)) %>%
 
-  filter((week %in% c(9, 10, 11, 12, 13))) %>% 
+  filter((week %in% c(4, 5))) %>% 
 
   group_by(id, name) %>%
   summarize(
@@ -68,7 +68,7 @@ qbs_s <- pbp %>%
   #titles and caption
   labs(x = "Success Rate",
        y = "EPA per Game",
-       title = "2024 EPA per Game and Success Rate - Wks 9-13",
+       title = "2025 EPA per Game and Success Rate, Weeks 4-5",
        subtitle = paste0("(bubble size = CPOE, min ", minplays, " plays)"),
        
          
