@@ -3,7 +3,7 @@ library(ggrepel)
 library(scales)
 
 # Read the data
-gs <- read.csv("QB Propsects - GS.csv", header = TRUE, sep = ",")
+gs <- read.csv("QB Prospects - GS.csv", header = TRUE, sep = ",")
 
 # Fit a linear model
 lm_model <- lm(GS ~ Draft, data = gs)
