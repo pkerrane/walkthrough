@@ -12,7 +12,7 @@ minplays <- 100
 
 mrw <- 22
 
-qbs2024 <- pbp %>%
+qbs2025 <- pbp %>%
   filter(!is.na(epa)) %>%
   group_by(id, name) %>%
   summarize(
@@ -33,27 +33,27 @@ qbs2024 <- pbp %>%
   filter(n_dropbacks >= 10 & n_plays >= minplays)
   
   load_teams()
-  qbs2024 <- qbs2024 %>%
+  qbs2025 <- qbs2025 %>%
   left_join(load_teams(), by = c('team' = 'team_abbr'))
   
   
   #make Figure
   
- qbs2024 %>%
+ qbs2025 %>%
   ggplot(aes(x = sr, y = epa_g)) +
   
   #horizontal line with mean EPA
-  geom_hline(yintercept = mean(qbs2024$epa_g), color = "black", linetype = "dashed", alpha=0.5) +
+  geom_hline(yintercept = mean(qbs2025$epa_g), color = "black", linetype = "dashed", alpha=0.5) +
   
   #vertical line with mean CPOE
-  geom_vline(xintercept =  mean(qbs2024$sr), color = "black", linetype = "dashed", alpha=0.5) +
+  geom_vline(xintercept =  mean(qbs2025$sr), color = "black", linetype = "dashed", alpha=0.5) +
   
   #add points for the QBs with the right colors
   #cex controls point size and alpha the transparency (alpha = 1 is normal)
  
- #geom_point(color = qbs2024$team_color, cex=qbs2024$n_plays / 55, alpha = .6) +
+ #geom_point(color = qbs2025$team_color, cex=qbs2025$n_plays / 55, alpha = .6) +
   
-  geom_point(color = qbs2024$team_color, cex= (qbs2024$cpoe + 15) / 1.5, alpha = .8) +
+  geom_point(color = qbs2025$team_color, cex= (qbs2025$cpoe + 15) / 1.5, alpha = .8) +
   
   
   #add names using ggrepel, which tries to make them not overlap
