@@ -6,13 +6,14 @@ library(dplyr)
 
 options(scipen = 9999)
 
-pbp <- load_pbp(2025)
+pbp <- load_pbp(2024)
 
-minplays <- 30
+minplays <- 250
+dbs <- 200
 
 mrw <- 22
 
-qbs2025 <- pbp %>%
+qbs2024 <- pbp %>%
   filter(!is.na(epa)) %>%
   group_by(id, name) %>%
   summarize(
@@ -30,42 +31,46 @@ qbs2025 <- pbp %>%
   
   #CHANGE +10 from Weeks 1-10, then +15
   
-  filter(n_dropbacks >= 10 & n_plays >= minplays)
+  filter(n_dropbacks >= dbs & n_plays >= minplays)
   
   load_teams()
-  qbs2025 <- qbs2025 %>%
+  qbs2024 <- qbs2024 %>%
   left_join(load_teams(), by = c('team' = 'team_abbr'))
   
   
   #make Figure
   
- qbs2025 %>%
+ qbs2024 %>%
   ggplot(aes(x = sr, y = epa_g)) +
   
   #horizontal line with mean EPA
   geom_hline(yintercept = 0, color = "black", linetype = "dashed", alpha=0.9) +
 
-#horizontal line with 2025 max EPA
+  #vertical line with mean SR, can use = .45, or = .46, if preferred to = means(qbs$sr),
+  geom_vline(xintercept =  .45, color = "black", linetype = "dashed", alpha=0.9) +
+
+
+
+#horizontal line with 2024 max EPA
   #geom_hline(yintercept = 15, color = "green3", linetype = "dashed", alpha=0.99) +
 
 #horizontal line with mean EPA
   #geom_hline(yintercept = -10, color = "red", linetype = "dashed", alpha=0.99) +
   
-  #vertical line with mean SR, can use = .45, or = .46, if preferred to = means(qbs$sr),
-  geom_vline(xintercept =  .45, color = "black", linetype = "dashed", alpha=0.9) +
+
 
   #vertical line with max success rate
-  geom_vline(xintercept =  .54, color = "green3", linetype = "dashed", alpha=0.99) +
+  #geom_vline(xintercept =  .54, color = "green3", linetype = "dashed", alpha=0.99) +
 
 #vertical line with max success rate
-  geom_vline(xintercept =  .34, color = "red", linetype = "dashed", alpha=0.99) +
+  #geom_vline(xintercept =  .34, color = "red", linetype = "dashed", alpha=0.99) +
   
   #add points for the QBs with the right colors
   #cex controls point size and alpha the transparency (alpha = 1 is normal)
  
- #geom_point(color = qbs2025$team_color, cex=qbs2025$n_plays / 55, alpha = .6) +
+ #geom_point(color = qbs2024$team_color, cex=qbs2024$n_plays / 55, alpha = .6) +
   
-  geom_point(color = qbs2025$team_color, cex= (qbs2025$cpoe + 15) / 1.5, alpha = .8) +
+  geom_point(color = qbs2024$team_color, cex= (qbs2024$cpoe + 15) / 1.5, alpha = .8) +
   
   
   #add names using ggrepel, which tries to make them not overlap
@@ -77,7 +82,7 @@ qbs2025 <- pbp %>%
   #titles and caption
   labs(x = "Success Rate",
        y = "EPA per Game",
-       title = "2025 EPA per Game and Success Rate",
+       title = "2024 EPA per Game and Success Rate",
        subtitle = paste0("(bubble size = CPOE, min ", minplays, " plays)"),
        
          
