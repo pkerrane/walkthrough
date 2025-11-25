@@ -46,10 +46,10 @@ qbs <- pbp %>%
   geom_hline(yintercept = 0, color = "black", linetype = "dashed", alpha=0.9) +
 
 #horizontal line with 2025 max EPA
-  geom_hline(yintercept = 15, color = "green3", linetype = "dashed", alpha=0.99) +
+  #geom_hline(yintercept = 15, color = "green3", linetype = "dashed", alpha=0.99) +
 
 #horizontal line with mean EPA
-  geom_hline(yintercept = -10, color = "red", linetype = "dashed", alpha=0.99) +
+  #geom_hline(yintercept = -10, color = "red", linetype = "dashed", alpha=0.99) +
   
   #vertical line with mean SR, can use = .45, or = .46, if preferred to = means(qbs$sr),
   geom_vline(xintercept =  .45, color = "black", linetype = "dashed", alpha=0.9) +
@@ -58,7 +58,7 @@ qbs <- pbp %>%
   geom_vline(xintercept =  .54, color = "green3", linetype = "dashed", alpha=0.99) +
 
 #vertical line with max success rate
-  #geom_vline(xintercept =  .34, color = "red", linetype = "dashed", alpha=0.99) +
+  geom_vline(xintercept =  .34, color = "red", linetype = "dashed", alpha=0.99) +
   
   #add points for the QBs with the right colors
   #cex controls point size and alpha the transparency (alpha = 1 is normal)
