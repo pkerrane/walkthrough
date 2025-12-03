@@ -8,7 +8,7 @@ options(scipen = 9999)
 
 pbp <- load_pbp(2025)
 
-wk <- 10
+wk <- 13
 
 minplays <- 10
 
