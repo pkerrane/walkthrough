@@ -1,0 +1,152 @@
+# ALL PROE  +  circle-each-team batch
+# =====================================================================
+# Your original pipeline (data + chart) with a batch added at the end:
+# it writes one PNG per team with that team ringed in black, named by the
+# full team name, into ./circled_teams/.
+#
+# WHAT I CHANGED FROM YOUR VERSION (one thing, on purpose):
+#   Your plot did `inner_join(pass_rates, pass_rates, by = "posteam")` and
+#   then relied on the global `pr`/`xpr` vectors for the aesthetics. That
+#   self-join duplicates every column to pr.x / pr.y, so a per-team SUBSET
+#   (needed to circle one team) wouldn't have a clean `pr`/`xpr` column to
+#   point the ring at. I removed the no-op self-join and plot straight from
+#   `pass_rates`, whose real `pr`/`xpr` columns the ring can use. The chart
+#   itself is identical.
+# =====================================================================
+
+# load relevant libraries
+library(tidyverse)
+library(dplyr)
+library(nflfastR)
+library(nflplotR)
+
+# ---- tunables for the rings ----------------------------------------
+CIRCLE_SIZE   <- 30     # ring diameter; raise if it doesn't clear the logo
+CIRCLE_STROKE <- 1.8    # ring line thickness
+OUT_DIR       <- "circled_teams"
+
+# =====================================================================
+# DATA  (unchanged)
+# =====================================================================
+pbp <- nflfastR::load_pbp(seasons = 2025)
+
+pass_rates <- pbp %>%
+  add_xpass() %>%
+  group_by(posteam) %>%
+  summarize(proe = mean(pass_oe, na.rm = TRUE), xpr = mean(xpass, na.rm = TRUE)) %>%
+  mutate(proe = proe/100) %>%
+  filter(!is.na(posteam))
+
+proe1 <- pbp %>%
+  filter(down == 1, ydstogo == 10) %>%
+  add_xpass() %>%
+  group_by(posteam) %>%
+  summarize(proe = mean(pass_oe, na.rm = TRUE)) %>%
+  mutate(proe = proe/100) %>%
+  filter(!is.na(posteam))
+
+colnms = c("proe", "xpr")
+pass_rates$pr <- rowSums(pass_rates[, colnms])
+pass_rates$proe1 <- proe1$proe
+
+x_midpoint <- (max(pass_rates$pr) + min(pass_rates$pr)) / 2
+x_high <- (max(pass_rates$pr))
+x_low  <- (min(pass_rates$pr))
+y_midpoint <- (max(pass_rates$xpr) + min(pass_rates$xpr)) / 2
+y_high <- (max(pass_rates$xpr))
+y_low  <- (min(pass_rates$xpr))
+
+# =====================================================================
+# BASE CHART  (your figure, defined once so the batch can reuse it)
+# =====================================================================
+base_plot <-
+  ggplot2::ggplot(pass_rates, aes(x = pr, y = xpr)) +
+
+  # horizontal line with mean
+  geom_hline(yintercept = mean(pass_rates$xpr), color = "black",
+             linetype = "dashed", alpha = 0.5) +
+  # vertical line with mean
+  geom_vline(xintercept = mean(pass_rates$pr), color = "black",
+             linetype = "dashed", alpha = 0.5) +
+
+  nflplotR::geom_nfl_logos(aes(team_abbr = posteam), width = 0.07, alpha = 1.0) +
+
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                     breaks = scales::pretty_breaks(n = 8)) +
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1),
+                     breaks = scales::pretty_breaks(n = 8)) +
+
+  annotate("text", x = x_high - .03, y = y_high, label = "Passing in Passing Game Scripts",
+           fontface = 2, alpha = 1.0, size = 5) +
+  annotate("text", x = x_high - .01, y = y_low,  label = "Dictacting the Pass",
+           fontface = 2, alpha = 1.0, size = 5) +
+  annotate("text", x = x_low + .03, y = y_high,  label = "Refusing to Pass",
+           fontface = 2, alpha = 1.0, size = 5) +
+  annotate("text", x = x_low + .03, y = y_low,   label = "Dictating the Run",
+           fontface = 2, alpha = 1.0, size = 5) +
+
+  ggplot2::labs(
+    x = "Pass Rate (Includes Scrambles & Sacks)",
+    y = "Expected Pass Rate",
+    caption = "Figure: @PatKerrane | Data: @nflfastR",
+    title = "2025 Pass Rate vs. Expected Pass Rate"
+  ) +
+  ggplot2::theme_bw() +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold")
+  )
+
+# save the plain chart too, and keep your clipboard copy of the table
+ggsave("pr_vs_xpr.png", plot = base_plot, width = 11, height = 8.5, dpi = 300)
+clipr::write_clip(pass_rates)
+
+# =====================================================================
+# CIRCLE EACH TEAM  (new)
+# =====================================================================
+# Full team names for filenames. Edit a value to rename its file.
+TEAM_NAMES <- c(
+  ARI = "Arizona Cardinals",   ATL = "Atlanta Falcons",
+  BAL = "Baltimore Ravens",    BUF = "Buffalo Bills",
+  CAR = "Carolina Panthers",   CHI = "Chicago Bears",
+  CIN = "Cincinnati Bengals",  CLE = "Cleveland Browns",
+  DAL = "Dallas Cowboys",      DEN = "Denver Broncos",
+  DET = "Detroit Lions",       GB  = "Green Bay Packers",
+  HOU = "Houston Texans",      IND = "Indianapolis Colts",
+  JAX = "Jacksonville Jaguars",KC  = "Kansas City Chiefs",
+  LA  = "Los Angeles Rams",    LAC = "Los Angeles Chargers",
+  LV  = "Las Vegas Raiders",   MIA = "Miami Dolphins",
+  MIN = "Minnesota Vikings",   NE  = "New England Patriots",
+  NO  = "New Orleans Saints",  NYG = "New York Giants",
+  NYJ = "New York Jets",       PHI = "Philadelphia Eagles",
+  PIT = "Pittsburgh Steelers", SEA = "Seattle Seahawks",
+  SF  = "San Francisco 49ers", TB  = "Tampa Bay Buccaneers",
+  TEN = "Tennessee Titans",    WAS = "Washington Commanders",
+  LAR = "Los Angeles Rams"     # in case an export uses LAR for LA
+)
+
+slugify <- function(x) {
+  x <- tolower(x)
+  x <- gsub("[^a-z0-9]+", "_", x)
+  gsub("^_|_$", "", x)
+}
+
+dir.create(OUT_DIR, showWarnings = FALSE)
+
+for (i in seq_len(nrow(pass_rates))) {
+  team <- pass_rates$posteam[i]
+  full <- if (!is.na(TEAM_NAMES[team])) TEAM_NAMES[[team]] else team
+  one  <- pass_rates[i, , drop = FALSE]
+
+  p <- base_plot +
+    geom_point(data = one, aes(x = pr, y = xpr),
+               shape = 21, fill = NA, colour = "black",
+               size = CIRCLE_SIZE, stroke = CIRCLE_STROKE)
+
+  out <- file.path(OUT_DIR, paste0(slugify(full), ".png"))
+  ggsave(out, plot = p, width = 11, height = 8.5, dpi = 300)
+  message("wrote ", out)
+}
+
+message("done — ", nrow(pass_rates), " ringed charts in ", OUT_DIR, "/")
+
+system(paste("open", shQuote(normalizePath("circled_teams"))))
