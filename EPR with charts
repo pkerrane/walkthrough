@@ -150,3 +150,5 @@ for (i in seq_len(nrow(pass_rates))) {
 message("done — ", nrow(pass_rates), " ringed charts in ", OUT_DIR, "/")
 
 system(paste("open", shQuote(normalizePath("circled_teams"))))
+
+clipr::write_clip(pass_rates)
