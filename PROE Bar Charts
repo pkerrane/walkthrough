@@ -27,9 +27,12 @@ library(tidyr)
 # ---- CONFIG (the only part you touch) -------------------------------
 SHEET_URL   <- "https://docs.google.com/spreadsheets/d/1Tp8Rk-jGeO8p4sV_hs-sQPDdlItpTlaF3h6lRlxSVYY/edit"
 SHEET_TAB   <- "PROE"
-# Output = your Downloads/proe_charts, resolved for Mac OR Windows
-.home   <- if (.Platform$OS.type == "windows") Sys.getenv("USERPROFILE") else path.expand("~")
-OUT_DIR <- file.path(.home, "Downloads", "proe_charts")
+# Output folder — Windows -> Documents\Walkthrough 26; Mac -> ~/Downloads
+OUT_DIR <- if (.Platform$OS.type == "windows") {
+  "C:/Users/patri/Documents/Walkthrough 26"
+} else {
+  file.path(path.expand("~"), "Downloads", "proe_charts")
+}
 FIG_W <- 10; FIG_H <- 5.8    # fixed chart size (inches) — do not change weekly
 
 # Teams to render. character(0) = ALL 32 teams (default; set once, no weekly edits).
