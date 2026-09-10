@@ -27,7 +27,9 @@ library(tidyr)
 # ---- CONFIG (the only part you touch) -------------------------------
 SHEET_URL   <- "https://docs.google.com/spreadsheets/d/1Tp8Rk-jGeO8p4sV_hs-sQPDdlItpTlaF3h6lRlxSVYY/edit"
 SHEET_TAB   <- "PROE"
-OUT_DIR     <- "~/Downloads/proe_charts"  # all charts land here, named by team
+# Output = your Downloads/proe_charts, resolved for Mac OR Windows
+.home   <- if (.Platform$OS.type == "windows") Sys.getenv("USERPROFILE") else path.expand("~")
+OUT_DIR <- file.path(.home, "Downloads", "proe_charts")
 FIG_W <- 10; FIG_H <- 5.8    # fixed chart size (inches) — do not change weekly
 
 # Teams to render. character(0) = ALL 32 teams (default; set once, no weekly edits).
@@ -153,7 +155,7 @@ build_against <- function(week, opp, proea, pra, tcol, title) {
 }
 
 # ---- render loop ----------------------------------------------------
-dir.create(OUT_DIR, showWarnings = FALSE)
+dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
 
 for (abbr in TEAMS_TO_PLOT) {
   d <- get_row(abbr)
