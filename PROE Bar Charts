@@ -27,7 +27,7 @@ library(tidyr)
 # ---- CONFIG (the only part you touch) -------------------------------
 SHEET_URL   <- "https://docs.google.com/spreadsheets/d/1Tp8Rk-jGeO8p4sV_hs-sQPDdlItpTlaF3h6lRlxSVYY/edit"
 SHEET_TAB   <- "PROE"
-OUT_DIR     <- "proe_charts" # created next to this script
+OUT_DIR     <- "~/Downloads/proe_charts"  # all charts land here, named by team
 FIG_W <- 10; FIG_H <- 5.8    # fixed chart size (inches) — do not change weekly
 
 # Teams to render. character(0) = ALL 32 teams (default; set once, no weekly edits).
