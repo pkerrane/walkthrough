@@ -78,7 +78,9 @@ get_row <- function(abbr) {
 
 # common theme
 base_theme <- theme_minimal(base_size = 13) +
-  theme(plot.title   = element_text(hjust = 0.5, face = "bold", size = 15),
+  theme(plot.background  = element_rect(fill = "white", color = NA),
+        panel.background = element_rect(fill = "white", color = NA),
+        plot.title   = element_text(hjust = 0.5, face = "bold", size = 15),
         legend.position = "top", legend.title = element_blank(),
         axis.text.x  = element_text(face = "bold", size = 11),
         axis.title   = element_blank(),
@@ -141,9 +143,9 @@ for (abbr in TEAMS_TO_PLOT) {
               c(0, 100), seq(0, 100, 25))
 
   ggsave(file.path(OUT_DIR, paste0(tolower(abbr), "_proe.png")),
-         p1, width = FIG_W, height = FIG_H, dpi = 200)
+         p1, width = FIG_W, height = FIG_H, dpi = 200, bg = "white")
   ggsave(file.path(OUT_DIR, paste0(tolower(abbr), "_exp.png")),
-         p2, width = FIG_W, height = FIG_H, dpi = 200)
+         p2, width = FIG_W, height = FIG_H, dpi = 200, bg = "white")
   message("wrote ", abbr, " (", n, " week", if (n>1) "s" else "", ")")
 }
 
