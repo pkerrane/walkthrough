@@ -32,7 +32,7 @@ FIG_W <- 10; FIG_H <- 5.8    # fixed chart size (inches) — do not change weekl
 
 # Teams to render this week (edit the Sunday-afternoon slate here).
 # Use character(0) or the load_teams list to do all 32.
-TEAMS_TO_PLOT <- c("ARI","ATL","CAR","CHI","IND","JAX","MIN","NO","TB","WAS")
+TEAMS_TO_PLOT <- c("IND")
 
 # ---- auth (private sheet: browser login on first run, silent after) ----
 gs4_auth()
