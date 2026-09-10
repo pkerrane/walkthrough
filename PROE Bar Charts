@@ -26,6 +26,4 @@ library(tidyr)
 
 # ---- CONFIG (the only part you touch) -------------------------------
 SHEET_URL   <- "https://docs.google.com/spreadsheets/d/1Tp8Rk-jGeO8p4sV_hs-sQPDdlItpTlaF3h6lRlxSVYY/edit"
-SHEET_TAB   <- "PROE"
-OUT_DIR     <- "proe_charts" # created next to this script
-FIG_W <- 10; FIG_H
+SHEET_TAB   <-
