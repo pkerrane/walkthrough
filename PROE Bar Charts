@@ -1,14 +1,14 @@
 # =====================================================================
 # Weekly PROE charts — batch from the Google Sheet
 # =====================================================================
-# For each team, reads its weekly data from the PROE tab and writes THREE charts:
-#   <team>_proe.png     PROE (grey) vs PROE-on-1st-and-10 (team color)
-#   <team>_exp.png      Expected Pass Rate (grey) vs Pass Rate (team color)
-#   <team>_against.png  PROE Against (team-color bars) + Pass Rate Against (grey line)
+# For each team you list, reads its weekly data from the PROE tab and writes
+# TWO charts, matching the agreed style:
+#   <team>_proe.png   PROE (grey) vs PROE-on-1st-and-10 (team color)
+#   <team>_exp.png    Expected Pass Rate (grey) vs Pass Rate (team color)
 #
 # Behavior baked in:
 #   - official team primary color (from nflreadr::load_teams)
-#   - fixed axes: PROE -30..30, Exp 0..100, Against -25..100
+#   - fixed axes: PROE -30..30 (outliers allowed to overflow), Exp 0..100
 #   - auto-trims to weeks that HAVE data (future matchups dropped;
 #     a bye that already happened stays as a gap)
 #   - chart size is FIXED every week; bars widen to fill when fewer weeks
@@ -37,7 +37,7 @@ TEAMS_TO_PLOT <- character(0)
 # ---- auth (private sheet: browser login on first run, silent after) ----
 gs4_auth()
 
-# ---- team primary colors + nicknames --------------------------------
+# ---- team primary colors -------------------------------------------
 teams_tbl <- nflreadr::load_teams()
 team_color <- setNames(teams_tbl$team_color, teams_tbl$team_abbr)
 team_nick  <- setNames(teams_tbl$team_nick,  teams_tbl$team_abbr)  # e.g. "Jaguars"
@@ -92,10 +92,10 @@ base_theme <- theme_minimal(base_size = 13) +
         panel.grid.major.x = element_blank(),
         panel.grid.minor = element_blank())
 
-# two-bar charts (PROE, and Expected vs Pass Rate)
+# build one chart (both charts share this shape; only data/scale differ)
 build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
                   tcol, title, ylims, ybreaks) {
-  nw <- length(week)
+  nw <- length(week)                       # compute once, outside tibble()
   long <- tibble(
     wk_num = rep(week, 2),
     series = factor(rep(c(grey_name, color_name), each = nw),
@@ -125,7 +125,7 @@ build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
     base_theme
 }
 
-# "against" combo chart: team-color PROE-against bars + dark-grey Pass-Rate line
+# build the "against" combo chart: team-color PROE-against bars + dark-grey Pass-Rate line
 build_against <- function(week, opp, proea, pra, tcol, title) {
   df <- tibble(wk_num = week, proea = proea, pra = pra)
   df$wk <- factor(df$wk_num, levels = week, labels = opp)
@@ -135,12 +135,14 @@ build_against <- function(week, opp, proea, pra, tcol, title) {
     geom_col(aes(y = proea, fill = "PROE"), width = 0.6, na.rm = TRUE) +
     geom_line(aes(y = pra, color = "Pass Rate", group = 1), linewidth = 1.1) +
     geom_point(aes(y = pra, color = "Pass Rate"), size = 2) +
+    # PROE bar labels: OUTSIDE the bar in team color (readable even on tiny bars)
     geom_text(data = subset(df, proea >= 0), aes(y = proea, label = paste0(round(proea), "%")),
-              vjust = 1.3, color = "white", fontface = "bold", size = 3.3, na.rm = TRUE) +
+              vjust = -0.6, color = tcol, fontface = "bold", size = 3.5, na.rm = TRUE) +
     geom_text(data = subset(df, proea < 0), aes(y = proea, label = paste0(round(proea), "%")),
-              vjust = -0.35, color = "white", fontface = "bold", size = 3.3, na.rm = TRUE) +
+              vjust = 1.5, color = tcol, fontface = "bold", size = 3.5, na.rm = TRUE) +
+    # Pass Rate line labels: dark grey, above the points
     geom_text(aes(y = pra, label = paste0(round(pra), "%")),
-              vjust = -0.9, color = "#3F3F3F", fontface = "bold", size = 3.3, na.rm = TRUE) +
+              vjust = -0.9, color = "#3F3F3F", fontface = "bold", size = 3.5, na.rm = TRUE) +
     scale_fill_manual(name = NULL, values = c("PROE" = tcol)) +
     scale_color_manual(name = NULL, values = c("Pass Rate" = "#3F3F3F")) +
     scale_y_continuous(breaks = seq(-25, 100, 25), labels = function(z) paste0(z, "%")) +
@@ -157,6 +159,7 @@ for (abbr in TEAMS_TO_PLOT) {
   d <- get_row(abbr)
   if (is.null(d)) { message("no row for ", abbr, " — skipped"); next }
 
+  # trim to the last week that has any data (drops future matchups)
   has <- which(!is.na(d$PROE) | !is.na(d$P110) | !is.na(d$XPR) | !is.na(d$PR))
   if (length(has) == 0) { message(abbr, ": no data yet — skipped"); next }
   n <- max(has); wk <- 1:n; opp <- d$OPP[1:n]
