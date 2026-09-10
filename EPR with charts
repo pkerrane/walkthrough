@@ -31,7 +31,7 @@ dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)  # builds BASE_DIR t
 # =====================================================================
 # DATA  (unchanged)
 # =====================================================================
-pbp <- nflfastR::load_pbp(seasons = 2025)
+pbp <- nflfastR::load_pbp(seasons = 2026)
 
 pass_rates <- pbp %>%
   add_xpass() %>%
