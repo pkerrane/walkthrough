@@ -1,0 +1,151 @@
+# =====================================================================
+# Weekly PROE charts — batch from the Google Sheet
+# =====================================================================
+# For each team you list, reads its weekly data from the PROE tab and writes
+# TWO charts, matching the agreed style:
+#   <team>_proe.png   PROE (grey) vs PROE-on-1st-and-10 (team color)
+#   <team>_exp.png    Expected Pass Rate (grey) vs Pass Rate (team color)
+#
+# Behavior baked in:
+#   - official team primary color (from nflreadr::load_teams)
+#   - fixed axes: PROE -30..30 (outliers allowed to overflow), Exp 0..100
+#   - auto-trims to weeks that HAVE data (future matchups dropped;
+#     a bye that already happened stays as a gap)
+#   - chart size is FIXED every week; bars widen to fill when fewer weeks
+#   - white bold labels inside the end of each bar; bold opponent x-axis
+#
+# ONE-TIME SETUP
+#   install.packages(c("googlesheets4","ggplot2","dplyr","tidyr","scales"))
+#   install.packages("nflreadr", repos = "https://nflverse.r-universe.dev")
+# =====================================================================
+
+library(googlesheets4)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# ---- CONFIG (the only part you touch) -------------------------------
+SHEET_URL   <- "https://docs.google.com/spreadsheets/d/1Tp8Rk-jGeO8p4sV_hs-sQPDdlItpTlaF3h6lRlxSVYY/edit"
+SHEET_TAB   <- "PROE"
+OUT_DIR     <- "proe_charts" # created next to this script
+FIG_W <- 10; FIG_H <- 5.8    # fixed chart size (inches) — do not change weekly
+
+# Teams to render this week (edit the Sunday-afternoon slate here).
+# Use character(0) or the load_teams list to do all 32.
+TEAMS_TO_PLOT <- c("ARI","ATL","CAR","CHI","IND","JAX","MIN","NO","TB","WAS")
+
+# ---- auth (private sheet: browser login on first run, silent after) ----
+gs4_auth()
+
+# ---- team primary colors -------------------------------------------
+teams_tbl <- nflreadr::load_teams()
+team_color <- setNames(teams_tbl$team_color, teams_tbl$team_abbr)
+if (length(TEAMS_TO_PLOT) == 0) TEAMS_TO_PLOT <- teams_tbl$team_abbr
+
+# ---- read the tab as raw character grid -----------------------------
+raw <- read_sheet(SHEET_URL, sheet = SHEET_TAB, col_names = FALSE, col_types = "c")
+M <- as.matrix(raw)
+trim <- function(x) trimws(ifelse(is.na(x), "", x))
+
+# locate the header row and the block columns dynamically
+hdr_row <- which(apply(M, 1, function(r) "Team" %in% trim(r)))[1]
+hdr <- trim(M[hdr_row, ])
+wk1_cols <- which(hdr == "Wk1")               # order L->R: PROE, 1st10, ExpPR, PR
+stopifnot(length(wk1_cols) >= 4)
+COL <- list(PROE = wk1_cols[1], P110 = wk1_cols[2],
+            XPR  = wk1_cols[3], PR   = wk1_cols[4],
+            OPP  = which(hdr == "Week 1 VS")[1],
+            TEAM = which(hdr == "Team")[1])
+
+# ---- helpers --------------------------------------------------------
+parse_pct <- function(v) suppressWarnings(as.numeric(gsub("%", "", trim(v))))
+
+get_row <- function(abbr) {
+  ri <- which(trim(M[, COL$TEAM]) == abbr)
+  ri <- ri[ri > hdr_row][1]
+  if (is.na(ri)) return(NULL)
+  slice <- function(start) as.numeric(parse_pct(M[ri, start:(start+17)]))
+  d <- list(PROE = slice(COL$PROE), P110 = slice(COL$P110),
+            XPR = slice(COL$XPR),  PR = slice(COL$PR),
+            OPP = trim(M[ri, COL$OPP:(COL$OPP+17)]))
+  # percent cells often read as fractions (0.61) -> scale to whole percent
+  allv <- c(d$PROE, d$P110, d$XPR, d$PR)
+  if (max(abs(allv), na.rm = TRUE) <= 2) {
+    d$PROE <- d$PROE*100; d$P110 <- d$P110*100; d$XPR <- d$XPR*100; d$PR <- d$PR*100
+  }
+  d
+}
+
+# common theme
+base_theme <- theme_minimal(base_size = 13) +
+  theme(plot.title   = element_text(hjust = 0.5, face = "bold", size = 15),
+        legend.position = "top", legend.title = element_blank(),
+        axis.text.x  = element_text(face = "bold", size = 11),
+        axis.title   = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor = element_blank())
+
+# build one chart (both charts share this shape; only data/scale differ)
+build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
+                  tcol, title, ylims, ybreaks) {
+  long <- tibble(
+    week = rep(week, 2),
+    opp  = rep(opp, 2),
+    series = factor(rep(c(grey_name, color_name), each = length(week)),
+                    levels = c(grey_name, color_name)),
+    value = c(grey_vals, color_vals)
+  )
+  long$wk <- factor(long$week, levels = sort(unique(long$week)),
+                    labels = opp[order(week)])
+  pos <- position_dodge2(width = 0.8, padding = 0.12, preserve = "single")
+
+  ggplot(long, aes(wk, value, fill = series, group = series)) +
+    { if (ylims[1] < 0) geom_hline(yintercept = 0, color = "black", linewidth = 0.6) } +
+    geom_col(width = 0.82, position = pos, na.rm = TRUE) +
+    geom_text(data = subset(long, value >= 0),
+              aes(label = paste0(round(value), "%")),
+              position = pos, vjust = 1.3, color = "white",
+              fontface = "bold", size = 3.8, na.rm = TRUE) +
+    geom_text(data = subset(long, value < 0),
+              aes(label = paste0(round(value), "%")),
+              position = pos, vjust = -0.35, color = "white",
+              fontface = "bold", size = 3.8, na.rm = TRUE) +
+    scale_fill_manual(values = setNames(c("#3F3F3F", tcol),
+                                        c(grey_name, color_name))) +
+    scale_y_continuous(breaks = ybreaks, labels = function(z) paste0(z, "%")) +
+    scale_x_discrete(drop = FALSE, expand = expansion(add = 0.6)) +
+    coord_cartesian(ylim = ylims, clip = "off") +
+    labs(title = title) +
+    base_theme
+}
+
+# ---- render loop ----------------------------------------------------
+dir.create(OUT_DIR, showWarnings = FALSE)
+
+for (abbr in TEAMS_TO_PLOT) {
+  d <- get_row(abbr)
+  if (is.null(d)) { message("no row for ", abbr, " — skipped"); next }
+
+  # trim to the last week that has any data (drops future matchups)
+  has <- which(!is.na(d$PROE) | !is.na(d$P110) | !is.na(d$XPR) | !is.na(d$PR))
+  if (length(has) == 0) { message(abbr, ": no data yet — skipped"); next }
+  n <- max(has); wk <- 1:n; opp <- d$OPP[1:n]
+  tcol <- if (!is.na(team_color[abbr])) team_color[[abbr]] else "#3F3F3F"
+
+  p1 <- build(wk, opp, d$PROE[1:n], d$P110[1:n],
+              "PROE", "PROE on 1st-and-10", tcol,
+              "Pass Rate over Expected by Week",
+              c(-30, 30), seq(-30, 30, 10))
+  p2 <- build(wk, opp, d$XPR[1:n], d$PR[1:n],
+              "Expected Pass Rate", "Pass Rate", tcol,
+              "Expected Pass Rate vs. Pass Rate",
+              c(0, 100), seq(0, 100, 25))
+
+  ggsave(file.path(OUT_DIR, paste0(tolower(abbr), "_proe.png")),
+         p1, width = FIG_W, height = FIG_H, dpi = 200)
+  ggsave(file.path(OUT_DIR, paste0(tolower(abbr), "_exp.png")),
+         p2, width = FIG_W, height = FIG_H, dpi = 200)
+  message("wrote ", abbr, " (", n, " week", if (n>1) "s" else "", ")")
+}
+
+message("\nDone. Charts in: ", normalizePath(OUT_DIR))
