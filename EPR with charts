@@ -2,16 +2,11 @@
 # =====================================================================
 # Your original pipeline (data + chart) with a batch added at the end:
 # it writes one PNG per team with that team ringed in black, named by the
-# full team name, into ./circled_teams/.
+# full team name, into <output>/circled_teams/.
 #
-# WHAT I CHANGED FROM YOUR VERSION (one thing, on purpose):
-#   Your plot did `inner_join(pass_rates, pass_rates, by = "posteam")` and
-#   then relied on the global `pr`/`xpr` vectors for the aesthetics. That
-#   self-join duplicates every column to pr.x / pr.y, so a per-team SUBSET
-#   (needed to circle one team) wouldn't have a clean `pr`/`xpr` column to
-#   point the ring at. I removed the no-op self-join and plot straight from
-#   `pass_rates`, whose real `pr`/`xpr` columns the ring can use. The chart
-#   itself is identical.
+# Output goes to the same place as your PROE charts:
+#   Windows -> C:/Users/patri/Documents/Walkthrough 26
+#   Mac     -> ~/Downloads
 # =====================================================================
 
 # load relevant libraries
@@ -23,7 +18,15 @@ library(nflplotR)
 # ---- tunables for the rings ----------------------------------------
 CIRCLE_SIZE   <- 30     # ring diameter; raise if it doesn't clear the logo
 CIRCLE_STROKE <- 1.8    # ring line thickness
-OUT_DIR       <- "circled_teams"
+
+# ---- output location (same parent folder as the PROE charts) -------
+BASE_DIR <- if (.Platform$OS.type == "windows") {
+  "C:/Users/patri/Documents/Walkthrough 26"
+} else {
+  path.expand("~/Downloads")
+}
+OUT_DIR <- file.path(BASE_DIR, "circled_teams")
+dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)  # builds BASE_DIR too
 
 # =====================================================================
 # DATA  (unchanged)
@@ -97,7 +100,8 @@ base_plot <-
   )
 
 # save the plain chart too, and keep your clipboard copy of the table
-ggsave("pr_vs_xpr.png", plot = base_plot, width = 11, height = 8.5, dpi = 300)
+ggsave(file.path(BASE_DIR, "pr_vs_xpr.png"), plot = base_plot,
+       width = 11, height = 8.5, dpi = 300)
 clipr::write_clip(pass_rates)
 
 # =====================================================================
@@ -130,8 +134,6 @@ slugify <- function(x) {
   gsub("^_|_$", "", x)
 }
 
-dir.create(OUT_DIR, showWarnings = FALSE)
-
 for (i in seq_len(nrow(pass_rates))) {
   team <- pass_rates$posteam[i]
   full <- if (!is.na(TEAM_NAMES[team])) TEAM_NAMES[[team]] else team
@@ -149,6 +151,9 @@ for (i in seq_len(nrow(pass_rates))) {
 
 message("done — ", nrow(pass_rates), " ringed charts in ", OUT_DIR, "/")
 
-system(paste("open", shQuote(normalizePath("circled_teams"))))
-
-clipr::write_clip(pass_rates)
+# open the output folder (Windows or Mac)
+if (.Platform$OS.type == "windows") {
+  shell.exec(normalizePath(OUT_DIR))
+} else {
+  system(paste("open", shQuote(normalizePath(OUT_DIR))))
+}
