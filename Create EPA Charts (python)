@@ -1,0 +1,3 @@
+cd "$env:USERPROFILE\Documents\Walkthrough 26"
+
+py qb_epa_full.py
