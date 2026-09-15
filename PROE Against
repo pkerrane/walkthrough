@@ -29,7 +29,7 @@ SHEET_URL   <- "https://docs.google.com/spreadsheets/d/1NtnC6u9lChffRDHYYIu4ESer
 SHEET_TAB   <- "PROE"
 # Output folder — Windows -> Documents\Walkthrough 26; Mac -> ~/Downloads
 OUT_DIR <- if (.Platform$OS.type == "windows") {
-  "C:/Users/patri/Documents/Walkthrough 26"
+  "C:/Users/patri/Documents/Walkthrough 26/weekly_PROE"
 } else {
   file.path(path.expand("~"), "Downloads", "proe_charts")
 }
