@@ -25,13 +25,13 @@ library(dplyr)
 library(tidyr)
 
 # ---- CONFIG (the only part you touch) -------------------------------
-SHEET_URL   <- "https://docs.google.com/spreadsheets/d/1NtnC6u9lChffRDHYYIu4ESerebHb-tgOK-g_XFpH_Oc/edit?usp=sharing"
+SHEET_URL   <- "https://docs.google.com/spreadsheets/d/1NtnC6u9lChffRDHYYIu4ESerebHb-tgOK-g_XFpH_Oc/edit"
 SHEET_TAB   <- "PROE"
-# Output folder — Windows -> Documents\Walkthrough 26; Mac -> ~/Downloads
+# Output folder — Windows -> Documents\Walkthrough 26\weekly_PROE; Mac -> ~/Downloads
 OUT_DIR <- if (.Platform$OS.type == "windows") {
   "C:/Users/patri/Documents/Walkthrough 26/weekly_PROE"
 } else {
-  file.path(path.expand("~"), "Downloads", "proe_charts")
+  file.path(path.expand("~"), "Downloads", "weekly_PROE")
 }
 FIG_W <- 10; FIG_H <- 5.8    # fixed chart size (inches) — do not change weekly
 
@@ -107,7 +107,7 @@ build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
                     levels = c(grey_name, color_name)),
     value  = c(grey_vals, color_vals)
   )
-  long$wk <- factor(long$wk_num, levels = week, labels = opp)
+  long$wk <- factor(long$wk_num, levels = week, labels = paste0(opp, "\nWk", week))
   pos <- position_dodge2(width = 0.8, padding = 0.12, preserve = "single")
 
   ggplot(long, aes(wk, value, fill = series, group = series)) +
@@ -133,7 +133,7 @@ build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
 # build the "against" combo chart: team-color PROE-against bars + dark-grey Pass-Rate line
 build_against <- function(week, opp, proea, pra, tcol, title) {
   df <- tibble(wk_num = week, proea = proea, pra = pra)
-  df$wk <- factor(df$wk_num, levels = week, labels = opp)
+  df$wk <- factor(df$wk_num, levels = week, labels = paste0(opp, "\nWk", week))
 
   ggplot(df, aes(x = wk)) +
     geom_hline(yintercept = 0, color = "black", linewidth = 0.6) +
