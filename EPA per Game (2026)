@@ -14,6 +14,7 @@ dbs <- 10
 
 qbs <- pbp %>%
   filter(!is.na(epa)) %>%
+  filter(qb_kneel != 1, qb_spike != 1) %>%   # exclude kneels & spikes to match RBSDM
   group_by(id, name) %>%
   summarize(
     epa = mean(qb_epa, na.rm = T),
