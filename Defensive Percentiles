@@ -1,0 +1,117 @@
+# =====================================================================
+# Weekly DEFENSE percentile charts — one bar chart per team
+# =====================================================================
+# Reads the "EPA Weekly" tab, keeps SEASON rows, and for each TEAM (the
+# opponent column F) draws the QBs it faced week by week: Success-Rate
+# percentile (green) and EPA-per-play percentile (blue) as grouped bars,
+# titled "<Nickname>: EPA and Success Rate Against", one PNG per team.
+#
+# Columns used (by spreadsheet letter):
+#   B = Year   C = Week   F = Team (opponent faced)   H = QB
+#   S = EPA per play percentile     T = Success rate percentile
+# =====================================================================
+
+library(googlesheets4)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# ---- CONFIG ---------------------------------------------------------
+SHEET_URL <- "https://docs.google.com/spreadsheets/d/1NtnC6u9lChffRDHYYIu4ESerebHb-tgOK-g_XFpH_Oc/edit"
+SHEET_TAB <- "EPA Weekly"
+SEASON    <- 2026
+HEADER_ROWS <- 1
+
+COL_YEAR <- 2   # B
+COL_WEEK <- 3   # C  (week label, e.g. "Wk1")
+COL_TEAM <- 6   # F  (team being defended = the opponent)
+COL_QB   <- 8   # H
+COL_EPA  <- 19  # S  (EPA per play percentile)
+COL_SR   <- 20  # T  (Success rate percentile)
+
+GREEN <- "#3BA53B"; BLUE <- "#3D7FD6"
+
+# abbreviation -> nickname for the title
+TEAM_NICK <- c(
+  ARI="Cardinals", ATL="Falcons",   BAL="Ravens",     BUF="Bills",
+  CAR="Panthers",  CHI="Bears",     CIN="Bengals",    CLE="Browns",
+  DAL="Cowboys",   DEN="Broncos",   DET="Lions",      GB="Packers",
+  HOU="Texans",    IND="Colts",     JAX="Jaguars",    KC="Chiefs",
+  LA="Rams",       LAC="Chargers",  LV="Raiders",     MIA="Dolphins",
+  MIN="Vikings",   NE="Patriots",   NO="Saints",      NYG="Giants",
+  NYJ="Jets",      PHI="Eagles",    PIT="Steelers",   SEA="Seahawks",
+  SF="49ers",      TB="Buccaneers", TEN="Titans",     WAS="Commanders",
+  LAR="Rams"
+)
+
+OUT_DIR <- if (.Platform$OS.type == "windows") {
+  "C:/Users/patri/Documents/Walkthrough 26/weekly_defense"
+} else {
+  file.path(path.expand("~"), "Downloads", "weekly_defense")
+}
+
+# ---- auth (same account as the other charts) ------------------------
+gs4_auth(email = "patrick.kerrane@gmail.com")
+
+# ---- read the tab as a raw character grid ---------------------------
+raw <- read_sheet(SHEET_URL, sheet = SHEET_TAB, col_names = FALSE, col_types = "c")
+M <- as.matrix(raw)
+trim <- function(x) trimws(ifelse(is.na(x), "", x))
+
+rows <- (HEADER_ROWS + 1):nrow(M)
+dat <- data.frame(
+  year    = trim(M[rows, COL_YEAR]),
+  week    = trim(M[rows, COL_WEEK]),
+  team    = trim(M[rows, COL_TEAM]),
+  qb      = trim(M[rows, COL_QB]),
+  epa_pct = suppressWarnings(as.numeric(M[rows, COL_EPA])),
+  sr_pct  = suppressWarnings(as.numeric(M[rows, COL_SR])),
+  stringsAsFactors = FALSE
+)
+dat <- dat[dat$year == as.character(SEASON) &
+           dat$team != "" &
+           (!is.na(dat$epa_pct) | !is.na(dat$sr_pct)), ]
+
+slugify <- function(x) {
+  x <- tolower(x); x <- gsub("[^a-z0-9]+", "_", x); gsub("^_|_$", "", x)
+}
+
+dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
+
+# ---- one chart per team ---------------------------------------------
+for (tm in unique(dat$team)) {
+  d <- dat[dat$team == tm, ]
+  d$idx <- seq_len(nrow(d))                     # sheet order = week order
+  nick <- if (!is.na(TEAM_NICK[tm])) TEAM_NICK[[tm]] else tm
+
+  long <- rbind(
+    data.frame(idx = d$idx, series = "Success Rate Percentile", value = d$sr_pct),
+    data.frame(idx = d$idx, series = "EPA per Play Percentile",  value = d$epa_pct)
+  )
+  long$series <- factor(long$series,
+                        levels = c("Success Rate Percentile", "EPA per Play Percentile"))
+  pos <- position_dodge2(width = 0.8, padding = 0.12, preserve = "single")
+
+  p <- ggplot(long, aes(factor(idx), value, fill = series, group = series)) +
+    geom_col(width = 0.82, position = pos, na.rm = TRUE) +
+    geom_text(aes(label = round(value)), position = pos, vjust = 1.4,
+              color = "white", fontface = "bold", size = 3, na.rm = TRUE) +
+    scale_fill_manual(values = c("Success Rate Percentile" = GREEN,
+                                 "EPA per Play Percentile"  = BLUE)) +
+    scale_y_continuous(limits = c(0, 100), breaks = c(0, 25, 50, 75, 100)) +
+    scale_x_discrete(labels = paste0(d$qb, "\n", d$week)) +
+    labs(title = paste0(nick, ": EPA and Success Rate Against"),
+         x = NULL, y = NULL, fill = NULL) +
+    theme_minimal(base_size = 13) +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+          legend.position = "top",
+          axis.text.x = element_text(size = 8, angle = 45, hjust = 0.5),
+          panel.grid.major.x = element_blank(),
+          panel.grid.minor = element_blank())
+
+  ggsave(file.path(OUT_DIR, paste0(slugify(nick), ".png")),
+         p, width = 12, height = 6.2, dpi = 200, bg = "white")
+  message("wrote ", nick)
+}
+
+message("\nDone. Charts in: ", normalizePath(OUT_DIR))
