@@ -92,11 +92,13 @@ base_plot <-
     x = "Pass Rate (Includes Scrambles & Sacks)",
     y = "Expected Pass Rate",
     caption = "Figure: @PatKerrane | Data: @nflfastR",
-    title = "2025 Pass Rate vs. Expected Pass Rate"
+    title = "2026 Pass Rate vs. Expected Pass Rate"
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
-    plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold")
+    plot.title = ggplot2::element_text(size = 14, hjust = 0.5, face = "bold"),
+    plot.subtitle = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold",
+                                          colour = "black")
   )
 
 # save the plain chart too, and keep your clipboard copy of the table
@@ -139,10 +141,19 @@ for (i in seq_len(nrow(pass_rates))) {
   full <- if (!is.na(TEAM_NAMES[team])) TEAM_NAMES[[team]] else team
   one  <- pass_rates[i, , drop = FALSE]
 
+  proe_r    <- round(one$proe  * 100)
+  proe1_r   <- round(one$proe1 * 100)
+  proe_str  <- if (proe_r  == 0) "0%" else sprintf("%+.0f%%", proe_r)   # avoid "-0%"
+  proe1_str <- if (proe1_r == 0) "0%" else sprintf("%+.0f%%", proe1_r)  # avoid "-0%"
+  sub <- sprintf(paste0("%s: Pass Rate %.0f%%, Expected Pass Rate %.0f%%, ",
+                        "PROE on 1st-and-10 %s, PROE %s"),
+                 full, one$pr * 100, one$xpr * 100, proe1_str, proe_str)
+
   p <- base_plot +
     geom_point(data = one, aes(x = pr, y = xpr),
                shape = 21, fill = NA, colour = "black",
-               size = CIRCLE_SIZE, stroke = CIRCLE_STROKE)
+               size = CIRCLE_SIZE, stroke = CIRCLE_STROKE) +
+    labs(subtitle = sub)
 
   out <- file.path(OUT_DIR, paste0(slugify(full), ".png"))
   ggsave(out, plot = p, width = 11, height = 8.5, dpi = 300)
