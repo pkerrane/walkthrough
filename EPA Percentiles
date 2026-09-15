@@ -1,0 +1,112 @@
+# =====================================================================
+# Weekly percentile charts — one line chart per player
+# =====================================================================
+# Reads the "EPA weekly" tab, keeps SEASON rows, and for each player draws
+# EPA-per-play percentile (blue) and Success-Rate percentile (green) week by
+# week against the opponent, saved as one PNG per player (named by player).
+#
+# Columns used (by spreadsheet letter):
+#   B = Year        F = Opponent    H = Player
+#   S = EPA per play percentile     T = Success rate percentile
+#
+# ONE-TIME SETUP  (already installed if you run the PROE charts)
+#   install.packages(c("googlesheets4","ggplot2","dplyr","tidyr"))
+# =====================================================================
+
+library(googlesheets4)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# ---- CONFIG ---------------------------------------------------------
+SHEET_URL <- "https://docs.google.com/spreadsheets/d/1NtnC6u9lChffRDHYYIu4ESerebHb-tgOK-g_XFpH_Oc/edit"
+SHEET_TAB <- "EPA Weekly"
+SEASON    <- 2026
+HEADER_ROWS <- 1        # how many header rows to skip at the top of the tab
+
+# column letters -> numbers
+COL_YEAR <- 2   # B
+COL_WEEK <- 3   # C  (week label, e.g. "Wk1")
+COL_OPP  <- 6   # F
+COL_PLYR <- 8   # H
+COL_EPA  <- 19  # S  (EPA per play percentile)
+COL_SR   <- 20  # T  (Success rate percentile)
+
+GREEN <- "#3BA53B"; BLUE <- "#3D7FD6"
+
+OUT_DIR <- if (.Platform$OS.type == "windows") {
+  "C:/Users/patri/Documents/Walkthrough 26/weekly_percentiles"
+} else {
+  file.path(path.expand("~"), "Downloads", "weekly_percentiles")
+}
+
+# ---- auth (same account as the PROE charts) -------------------------
+gs4_auth(email = "patrick.kerrane@gmail.com")
+
+# ---- read the tab as a raw character grid ---------------------------
+raw <- read_sheet(SHEET_URL, sheet = SHEET_TAB, col_names = FALSE, col_types = "c")
+M <- as.matrix(raw)
+trim <- function(x) trimws(ifelse(is.na(x), "", x))
+
+rows <- (HEADER_ROWS + 1):nrow(M)
+dat <- data.frame(
+  year    = trim(M[rows, COL_YEAR]),
+  week    = trim(M[rows, COL_WEEK]),
+  opp     = trim(M[rows, COL_OPP]),
+  player  = trim(M[rows, COL_PLYR]),
+  epa_pct = suppressWarnings(as.numeric(M[rows, COL_EPA])),
+  sr_pct  = suppressWarnings(as.numeric(M[rows, COL_SR])),
+  stringsAsFactors = FALSE
+)
+
+# keep this season, real players, and rows that have at least one value
+dat <- dat[dat$year == as.character(SEASON) &
+           dat$player != "" &
+           (!is.na(dat$epa_pct) | !is.na(dat$sr_pct)), ]
+
+slugify <- function(x) {
+  x <- tolower(x); x <- gsub("[^a-z0-9]+", "_", x); gsub("^_|_$", "", x)
+}
+
+dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
+
+# ---- one chart per player -------------------------------------------
+for (pl in unique(dat$player)) {
+  d <- dat[dat$player == pl, ]
+  d$wk <- seq_len(nrow(d))                       # sheet order = week order
+
+  long <- rbind(
+    data.frame(wk = d$wk, series = "Success Rate Percentile", value = d$sr_pct),
+    data.frame(wk = d$wk, series = "EPA per Play Percentile",  value = d$epa_pct)
+  )
+  long$series <- factor(long$series,
+                        levels = c("Success Rate Percentile", "EPA per Play Percentile"))
+
+  p <- ggplot(long, aes(factor(wk), value, color = series, group = series)) +
+    geom_line(linewidth = 1) +
+    geom_point(size = 1.6) +
+    # green labels above, blue labels below (readable where lines cross)
+    geom_text(data = subset(long, series == "Success Rate Percentile"),
+              aes(label = round(value)), vjust = -0.9, size = 3,
+              fontface = "bold", show.legend = FALSE, na.rm = TRUE) +
+    geom_text(data = subset(long, series == "EPA per Play Percentile"),
+              aes(label = round(value)), vjust = 1.7, size = 3,
+              fontface = "bold", show.legend = FALSE, na.rm = TRUE) +
+    scale_color_manual(values = c("Success Rate Percentile" = GREEN,
+                                  "EPA per Play Percentile"  = BLUE)) +
+    scale_y_continuous(limits = c(0, 105), breaks = c(0, 25, 50, 75, 100)) +
+    scale_x_discrete(labels = paste0(d$opp, "\n", d$week)) +
+    labs(title = pl, x = NULL, y = NULL, color = NULL) +
+    theme_minimal(base_size = 13) +
+    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 17),
+          legend.position = "top",
+          axis.text.x = element_text(size = 11),
+          panel.grid.major.x = element_blank(),
+          panel.grid.minor = element_blank())
+
+  ggsave(file.path(OUT_DIR, paste0(slugify(pl), ".png")),
+         p, width = 11, height = 6, dpi = 200, bg = "white")
+  message("wrote ", pl)
+}
+
+message("\nDone. Charts in: ", normalizePath(OUT_DIR))
