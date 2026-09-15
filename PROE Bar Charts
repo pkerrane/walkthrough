@@ -25,7 +25,7 @@ library(dplyr)
 library(tidyr)
 
 # ---- CONFIG (the only part you touch) -------------------------------
-SHEET_URL   <- "https://docs.google.com/spreadsheets/d/1Tp8Rk-jGeO8p4sV_hs-sQPDdlItpTlaF3h6lRlxSVYY/edit"
+SHEET_URL   <- "https://docs.google.com/spreadsheets/d/1NtnC6u9lChffRDHYYIu4ESerebHb-tgOK-g_XFpH_Oc/edit?usp=sharing"
 SHEET_TAB   <- "PROE"
 # Output folder — Windows -> Documents\Walkthrough 26; Mac -> ~/Downloads
 OUT_DIR <- if (.Platform$OS.type == "windows") {
