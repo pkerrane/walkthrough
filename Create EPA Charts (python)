@@ -1,7 +1,11 @@
-cd "$env:USERPROFILE\Documents\Walkthrough 26"
-curl -o qb_epa_full.py https://raw.githubusercontent.com/pkerrane/walkthrough/refs/heads/main/qb_epa_full.py
-py qb_epa_full.py
+#PC Version
 
-cd "$env:USERPROFILE\Documents\Walkthrough 26"
-curl -o qb_epa_weekly.py https://raw.githubusercontent.com/pkerrane/walkthrough/refs/heads/main/qb_epa_weekly.py
-py qb_epa_weekly.py 1
+cd "$env:USERPROFILE\Documents\Walkthrough 26"; curl -o qb_epa_full.py https://raw.githubusercontent.com/pkerrane/walkthrough/refs/heads/main/qb_epa_full.py; py qb_epa_full.py --year 2026 --minplays 10
+
+curl -o qb_epa_weekly.py https://raw.githubusercontent.com/pkerrane/walkthrough/refs/heads/main/qb_epa_weekly.py; py qb_epa_weekly.py 1 --year 2026 --minplays 10
+
+
+#Mac Version
+
+cd ~/Documents/"Walkthrough 26" && curl -o qb_epa_full.py https://raw.githubusercontent.com/pkerrane/walkthrough/refs/heads/main/qb_epa_full.py && python3 qb_epa_full.py --year 2026 --minplays 10
+cd ~/Documents/"Walkthrough 26" && curl -o qb_epa_weekly.py https://raw.githubusercontent.com/pkerrane/walkthrough/refs/heads/main/qb_epa_weekly.py && python3 qb_epa_weekly.py 1 --year 2026 --minplays 10
