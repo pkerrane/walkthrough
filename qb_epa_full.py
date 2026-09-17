@@ -14,6 +14,7 @@ RUN
     -> charts land in ./output/ (base) and ./output/circled/ (one per QB)
 """
 import os
+import argparse
 import re
 import unicodedata
 from pathlib import Path
@@ -27,9 +28,14 @@ from matplotlib.transforms import IdentityTransform
 # ---------------------------------------------------------------------------
 # CONFIG
 # ---------------------------------------------------------------------------
-SEASON   = 2026
-MINPLAYS = 10           # min plays to qualify  (your `minplays`)
-DBS      = 10           # min dropbacks to qualify  (your `dbs`)
+# command line: py qb_epa_full.py [--year 2026] [--minplays 10]
+_ap = argparse.ArgumentParser()
+_ap.add_argument("--year", type=int, default=2026, help="season (default 2026)")
+_ap.add_argument("--minplays", type=int, default=10, help="min plays/dropbacks to qualify (default 10)")
+_args = _ap.parse_args()
+SEASON   = _args.year
+MINPLAYS = _args.minplays
+DBS      = round(0.8 * MINPLAYS)   # dropback floor = 80% of plays
 # output -> Walkthrough 26 / EPA Circled QBs  (absolute, so it doesn't depend on where you run it)
 _home    = os.environ.get("USERPROFILE") or os.path.expanduser("~")
 OUTPUT   = Path(_home) / "Documents" / "Walkthrough 26" / "EPA Circled QBs"
