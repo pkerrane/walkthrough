@@ -15,6 +15,7 @@ RUN
 """
 import os
 import sys
+import argparse
 import re
 import unicodedata
 from pathlib import Path
@@ -28,10 +29,16 @@ from matplotlib.transforms import IdentityTransform
 # ---------------------------------------------------------------------------
 # CONFIG
 # ---------------------------------------------------------------------------
-SEASON   = 2026
-wk       = int(sys.argv[1]) if len(sys.argv) > 1 else 1   # week from the command line: py qb_epa_weekly.py 3
-MINPLAYS = 10           # min plays to qualify  (your `minplays`)
-DBS      = 10           # min dropbacks to qualify  (your `dbs`)
+# command line: py qb_epa_weekly.py [week] [--year 2026] [--minplays 10]
+_ap = argparse.ArgumentParser()
+_ap.add_argument("wk", nargs="?", type=int, default=1, help="week number (default 1)")
+_ap.add_argument("--year", type=int, default=2026, help="season (default 2026)")
+_ap.add_argument("--minplays", type=int, default=10, help="min plays/dropbacks to qualify (default 10)")
+_args = _ap.parse_args()
+wk       = _args.wk
+SEASON   = _args.year
+MINPLAYS = _args.minplays
+DBS      = round(0.8 * MINPLAYS)   # dropback floor = 80% of plays
 # output -> Walkthrough 26 / Weekly EPA Circled QBs / Week <wk>
 _home    = os.environ.get("USERPROFILE") or os.path.expanduser("~")
 OUTPUT   = Path(_home) / "Documents" / "Walkthrough 26" / "Weekly EPA Circled QBs" / f"Week {wk}"
