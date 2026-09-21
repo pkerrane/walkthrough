@@ -115,15 +115,16 @@ build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
   # team series -> team color), like the "against" chart; or white & inside.
   if (outside_labels) {
     long$lab_col <- ifelse(as.character(long$series) == grey_name, "#3F3F3F", tcol)
+    # ONE label layer (keeps dodge aligned even when a week's two bars have
+    # opposite signs); nudge each label above/below its bar via lab_y.
+    lab_df <- subset(long, !is.na(value))
+    off <- 0.05 * (ylims[2] - ylims[1])
+    lab_df$lab_y <- lab_df$value + ifelse(lab_df$value >= 0, off, -off)
     labs_layer <- list(
-      geom_text(data = subset(long, value >= 0),
-                aes(label = paste0(round(value), "%"), color = lab_col),
-                position = pos, vjust = -0.6, fontface = "bold", size = 3.8,
-                na.rm = TRUE, show.legend = FALSE),
-      geom_text(data = subset(long, value < 0),
-                aes(label = paste0(round(value), "%"), color = lab_col),
-                position = pos, vjust = 1.5, fontface = "bold", size = 3.8,
-                na.rm = TRUE, show.legend = FALSE),
+      geom_text(data = lab_df,
+                aes(y = lab_y, label = paste0(round(value), "%"), color = lab_col),
+                position = pos, vjust = 0.5, fontface = "bold", size = 3.8,
+                show.legend = FALSE),
       scale_color_identity()
     )
   } else {
