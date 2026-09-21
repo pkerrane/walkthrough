@@ -82,16 +82,16 @@ for (pl in unique(dat$player)) {
   long$series <- factor(long$series,
                         levels = c("Success Rate Percentile", "EPA per Play Percentile"))
 
+  # per week: higher value's label goes ABOVE its point, lower value's BELOW
+  long$rk    <- ave(long$value, long$wk, FUN = function(v) rank(-v, ties.method = "first"))
+  lab_off    <- 4.5
+  long$lab_y <- long$value + ifelse(long$rk == 1, lab_off, -lab_off)
+
   p <- ggplot(long, aes(factor(wk), value, color = series, group = series)) +
     geom_line(linewidth = 1) +
     geom_point(size = 2.2) +
-    # green labels above, blue labels below (readable where lines cross)
-    geom_text(data = subset(long, series == "Success Rate Percentile"),
-              aes(label = round(value)), vjust = -0.9, size = 5,
-              fontface = "bold", show.legend = FALSE, na.rm = TRUE) +
-    geom_text(data = subset(long, series == "EPA per Play Percentile"),
-              aes(label = round(value)), vjust = 1.7, size = 5,
-              fontface = "bold", show.legend = FALSE, na.rm = TRUE) +
+    geom_text(aes(y = lab_y, label = round(value)),
+              size = 5, fontface = "bold", show.legend = FALSE, na.rm = TRUE) +
     scale_color_manual(values = c("Success Rate Percentile" = GREEN,
                                   "EPA per Play Percentile"  = BLUE)) +
     scale_y_continuous(limits = c(0, 105), breaks = c(0, 25, 50, 75, 100)) +
