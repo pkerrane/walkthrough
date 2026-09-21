@@ -110,15 +110,20 @@ build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
   long$wk <- factor(long$wk_num, levels = week, labels = paste0(opp, "\nWk", week))
   pos <- position_dodge2(width = 0.8, padding = 0.12, preserve = "single")
 
-  # labels: dark & OUTSIDE the bar (readable on tiny bars) or white & inside
+  # labels: OUTSIDE the bar, colored to match each bar (grey series -> grey,
+  # team series -> team color), like the "against" chart; or white & inside.
   if (outside_labels) {
+    long$lab_col <- ifelse(as.character(long$series) == grey_name, "#3F3F3F", tcol)
     labs_layer <- list(
-      geom_text(data = subset(long, value >= 0), aes(label = paste0(round(value), "%")),
-                position = pos, vjust = -0.6, color = "black",
-                fontface = "bold", size = 3.8, na.rm = TRUE),
-      geom_text(data = subset(long, value < 0), aes(label = paste0(round(value), "%")),
-                position = pos, vjust = 1.5, color = "black",
-                fontface = "bold", size = 3.8, na.rm = TRUE)
+      geom_text(data = subset(long, value >= 0),
+                aes(label = paste0(round(value), "%"), color = lab_col),
+                position = pos, vjust = -0.6, fontface = "bold", size = 3.8,
+                na.rm = TRUE, show.legend = FALSE),
+      geom_text(data = subset(long, value < 0),
+                aes(label = paste0(round(value), "%"), color = lab_col),
+                position = pos, vjust = 1.5, fontface = "bold", size = 3.8,
+                na.rm = TRUE, show.legend = FALSE),
+      scale_color_identity()
     )
   } else {
     labs_layer <- list(
@@ -191,7 +196,7 @@ for (abbr in TEAMS_TO_PLOT) {
   p2 <- build(wk, opp, d$XPR[1:n], d$PR[1:n],
               "Expected Pass Rate", "Pass Rate", tcol,
               "Expected Pass Rate vs. Pass Rate",
-              c(0, 100), seq(0, 100, 25))
+              c(0, 100), seq(0, 100, 25), outside_labels = TRUE)
   nick <- if (!is.na(team_nick[abbr])) team_nick[[abbr]] else abbr
   p3 <- build_against(wk, opp, d$PROEA[1:n], d$PRA[1:n], tcol,
               paste0("PROE and Pass Rate Against the ", nick))
