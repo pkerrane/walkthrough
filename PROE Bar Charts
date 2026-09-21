@@ -99,7 +99,7 @@ base_theme <- theme_minimal(base_size = 13) +
 
 # build one chart (both charts share this shape; only data/scale differ)
 build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
-                  tcol, title, ylims, ybreaks) {
+                  tcol, title, ylims, ybreaks, outside_labels = FALSE) {
   nw <- length(week)                       # compute once, outside tibble()
   long <- tibble(
     wk_num = rep(week, 2),
@@ -110,17 +110,31 @@ build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
   long$wk <- factor(long$wk_num, levels = week, labels = paste0(opp, "\nWk", week))
   pos <- position_dodge2(width = 0.8, padding = 0.12, preserve = "single")
 
+  # labels: dark & OUTSIDE the bar (readable on tiny bars) or white & inside
+  if (outside_labels) {
+    labs_layer <- list(
+      geom_text(data = subset(long, value >= 0), aes(label = paste0(round(value), "%")),
+                position = pos, vjust = -0.6, color = "black",
+                fontface = "bold", size = 3.8, na.rm = TRUE),
+      geom_text(data = subset(long, value < 0), aes(label = paste0(round(value), "%")),
+                position = pos, vjust = 1.5, color = "black",
+                fontface = "bold", size = 3.8, na.rm = TRUE)
+    )
+  } else {
+    labs_layer <- list(
+      geom_text(data = subset(long, value >= 0), aes(label = paste0(round(value), "%")),
+                position = pos, vjust = 1.3, color = "white",
+                fontface = "bold", size = 3.8, na.rm = TRUE),
+      geom_text(data = subset(long, value < 0), aes(label = paste0(round(value), "%")),
+                position = pos, vjust = -0.35, color = "white",
+                fontface = "bold", size = 3.8, na.rm = TRUE)
+    )
+  }
+
   ggplot(long, aes(wk, value, fill = series, group = series)) +
     { if (ylims[1] < 0) geom_hline(yintercept = 0, color = "black", linewidth = 0.6) } +
     geom_col(width = 0.82, position = pos, na.rm = TRUE) +
-    geom_text(data = subset(long, value >= 0),
-              aes(label = paste0(round(value), "%")),
-              position = pos, vjust = 1.3, color = "white",
-              fontface = "bold", size = 3.8, na.rm = TRUE) +
-    geom_text(data = subset(long, value < 0),
-              aes(label = paste0(round(value), "%")),
-              position = pos, vjust = -0.35, color = "white",
-              fontface = "bold", size = 3.8, na.rm = TRUE) +
+    labs_layer +
     scale_fill_manual(values = setNames(c("#3F3F3F", tcol),
                                         c(grey_name, color_name))) +
     scale_y_continuous(breaks = ybreaks, labels = function(z) paste0(z, "%")) +
@@ -173,7 +187,7 @@ for (abbr in TEAMS_TO_PLOT) {
   p1 <- build(wk, opp, d$PROE[1:n], d$P110[1:n],
               "PROE", "PROE on 1st-and-10", tcol,
               "Pass Rate over Expected by Week",
-              c(-30, 30), seq(-30, 30, 10))
+              c(-30, 30), seq(-30, 30, 10), outside_labels = TRUE)
   p2 <- build(wk, opp, d$XPR[1:n], d$PR[1:n],
               "Expected Pass Rate", "Pass Rate", tcol,
               "Expected Pass Rate vs. Pass Rate",
