@@ -90,22 +90,32 @@ for (tm in unique(dat$team)) {
   )
   long$series <- factor(long$series,
                         levels = c("Success Rate Percentile", "EPA per Play Percentile"))
+  long$lab_col <- ifelse(long$series == "Success Rate Percentile", GREEN, BLUE)
   pos <- position_dodge2(width = 0.8, padding = 0.12, preserve = "single")
+
+  # x-axis name font shrinks as more QBs are added (chart width is fixed)
+  nq    <- nrow(d)
+  xfont <- if (nq <= 8) 12 else max(7, 12 - 0.4 * (nq - 8))
 
   p <- ggplot(long, aes(factor(idx), value, fill = series, group = series)) +
     geom_col(width = 0.82, position = pos, na.rm = TRUE) +
-    geom_text(aes(label = round(value)), position = pos, vjust = 1.4,
-              color = "white", fontface = "bold", size = 3, na.rm = TRUE) +
+    geom_text(aes(label = round(value), color = lab_col),
+              position = pos, vjust = -0.5, fontface = "bold", size = 4.5,
+              na.rm = TRUE, show.legend = FALSE) +
     scale_fill_manual(values = c("Success Rate Percentile" = GREEN,
                                  "EPA per Play Percentile"  = BLUE)) +
-    scale_y_continuous(limits = c(0, 100), breaks = c(0, 25, 50, 75, 100)) +
+    scale_color_identity() +
+    scale_y_continuous(breaks = c(0, 25, 50, 75, 100)) +
     scale_x_discrete(labels = paste0(d$qb, "\n", d$week)) +
+    coord_cartesian(ylim = c(0, 100), clip = "off") +
     labs(title = paste0(nick, ": EPA and Success Rate Against"),
          x = NULL, y = NULL, fill = NULL) +
     theme_minimal(base_size = 13) +
-    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 17),
           legend.position = "top",
-          axis.text.x = element_text(size = 8, angle = 45, hjust = 0.5),
+          legend.text = element_text(size = 12),
+          axis.text.x = element_text(size = xfont, angle = 45, hjust = 0.5),
+          axis.text.y = element_text(size = 12),
           panel.grid.major.x = element_blank(),
           panel.grid.minor = element_blank())
 
