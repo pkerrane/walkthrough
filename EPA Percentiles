@@ -84,13 +84,13 @@ for (pl in unique(dat$player)) {
 
   p <- ggplot(long, aes(factor(wk), value, color = series, group = series)) +
     geom_line(linewidth = 1) +
-    geom_point(size = 1.6) +
+    geom_point(size = 2.2) +
     # green labels above, blue labels below (readable where lines cross)
     geom_text(data = subset(long, series == "Success Rate Percentile"),
-              aes(label = round(value)), vjust = -0.9, size = 3,
+              aes(label = round(value)), vjust = -0.9, size = 5,
               fontface = "bold", show.legend = FALSE, na.rm = TRUE) +
     geom_text(data = subset(long, series == "EPA per Play Percentile"),
-              aes(label = round(value)), vjust = 1.7, size = 3,
+              aes(label = round(value)), vjust = 1.7, size = 5,
               fontface = "bold", show.legend = FALSE, na.rm = TRUE) +
     scale_color_manual(values = c("Success Rate Percentile" = GREEN,
                                   "EPA per Play Percentile"  = BLUE)) +
@@ -98,9 +98,11 @@ for (pl in unique(dat$player)) {
     scale_x_discrete(labels = paste0(d$opp, "\n", d$week)) +
     labs(title = pl, x = NULL, y = NULL, color = NULL) +
     theme_minimal(base_size = 13) +
-    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 17),
+    theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 18),
           legend.position = "top",
-          axis.text.x = element_text(size = 11),
+          legend.text = element_text(size = 13),
+          axis.text.x = element_text(size = 13),
+          axis.text.y = element_text(size = 12),
           panel.grid.major.x = element_blank(),
           panel.grid.minor = element_blank())
 
