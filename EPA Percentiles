@@ -29,6 +29,7 @@ COL_YEAR <- 2   # B
 COL_WEEK <- 3   # C  (week label, e.g. "Wk1")
 COL_OPP  <- 6   # F
 COL_PLYR <- 8   # H
+COL_FULL <- 25  # Y  (QB full name — used for title & file name)
 COL_EPA  <- 19  # S  (EPA per play percentile)
 COL_SR   <- 20  # T  (Success rate percentile)
 
@@ -54,6 +55,7 @@ dat <- data.frame(
   week    = trim(M[rows, COL_WEEK]),
   opp     = trim(M[rows, COL_OPP]),
   player  = trim(M[rows, COL_PLYR]),
+  full    = trim(M[rows, COL_FULL]),
   epa_pct = suppressWarnings(as.numeric(M[rows, COL_EPA])),
   sr_pct  = suppressWarnings(as.numeric(M[rows, COL_SR])),
   stringsAsFactors = FALSE
@@ -74,6 +76,10 @@ dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
 for (pl in unique(dat$player)) {
   d <- dat[dat$player == pl, ]
   d$wk <- seq_len(nrow(d))                       # sheet order = week order
+
+  # full name (col Y) for the title & file name; fall back to the abbreviation
+  fulls   <- d$full[d$full != ""]
+  pl_name <- if (length(fulls) > 0) fulls[1] else pl
 
   long <- rbind(
     data.frame(wk = d$wk, series = "Success Rate Percentile", value = d$sr_pct),
@@ -96,7 +102,7 @@ for (pl in unique(dat$player)) {
                                   "EPA per Play Percentile"  = BLUE)) +
     scale_y_continuous(limits = c(0, 105), breaks = c(0, 25, 50, 75, 100)) +
     scale_x_discrete(labels = paste0(d$opp, "\n", d$week)) +
-    labs(title = pl, x = NULL, y = NULL, color = NULL) +
+    labs(title = pl_name, x = NULL, y = NULL, color = NULL) +
     theme_minimal(base_size = 13) +
     theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 18),
           legend.position = "top",
@@ -106,7 +112,7 @@ for (pl in unique(dat$player)) {
           panel.grid.major.x = element_blank(),
           panel.grid.minor = element_blank())
 
-  ggsave(file.path(OUT_DIR, paste0(slugify(pl), ".png")),
+  ggsave(file.path(OUT_DIR, paste0(slugify(pl_name), ".png")),
          p, width = 11, height = 6, dpi = 200, bg = "white")
   message("wrote ", pl)
 }
