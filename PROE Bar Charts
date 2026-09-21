@@ -45,6 +45,7 @@ gs4_auth()
 # ---- team primary colors -------------------------------------------
 teams_tbl <- nflreadr::load_teams()
 team_color <- setNames(teams_tbl$team_color, teams_tbl$team_abbr)
+team_color["CLE"] <- "#311D00"   # Browns brown, to distinguish from Bengals orange
 team_nick  <- setNames(teams_tbl$team_nick,  teams_tbl$team_abbr)  # e.g. "Jaguars"
 if (length(TEAMS_TO_PLOT) == 0) TEAMS_TO_PLOT <- teams_tbl$team_abbr
 
@@ -188,16 +189,16 @@ for (abbr in TEAMS_TO_PLOT) {
   if (length(has) == 0) { message(abbr, ": no data yet — skipped"); next }
   n <- max(has); wk <- 1:n; opp <- d$OPP[1:n]
   tcol <- if (!is.na(team_color[abbr])) team_color[[abbr]] else "#3F3F3F"
+  nick <- if (!is.na(team_nick[abbr])) team_nick[[abbr]] else abbr
 
   p1 <- build(wk, opp, d$PROE[1:n], d$P110[1:n],
               "PROE", "PROE on 1st-and-10", tcol,
-              "Pass Rate over Expected by Week",
+              paste0(nick, ": Pass Rate over Expected by Week"),
               c(-30, 30), seq(-30, 30, 10), outside_labels = TRUE)
   p2 <- build(wk, opp, d$XPR[1:n], d$PR[1:n],
               "Expected Pass Rate", "Pass Rate", tcol,
-              "Expected Pass Rate vs. Pass Rate",
+              paste0(nick, ": Expected Pass Rate vs. Pass Rate"),
               c(0, 100), seq(0, 100, 25), outside_labels = TRUE)
-  nick <- if (!is.na(team_nick[abbr])) team_nick[[abbr]] else abbr
   p3 <- build_against(wk, opp, d$PROEA[1:n], d$PRA[1:n], tcol,
               paste0("PROE and Pass Rate Against the ", nick))
 
