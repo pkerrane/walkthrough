@@ -31,7 +31,7 @@ dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)  # builds BASE_DIR t
 # =====================================================================
 # DATA  (unchanged)
 # =====================================================================
-pbp <- nflfastR::load_pbp(seasons = 2026)
+pbp <- nflfastR::load_pbp(seasons = 2025)
 
 pass_rates <- pbp %>%
   add_xpass() %>%
@@ -79,9 +79,9 @@ base_plot <-
   scale_x_continuous(labels = scales::percent_format(accuracy = 1),
                      breaks = scales::pretty_breaks(n = 8)) +
 
-  annotate("text", x = x_high - .07, y = y_high, label = "Passing in Passing Game Scripts",
+  annotate("text", x = x_high - .03, y = y_high, label = "Passing in Passing Game Scripts",
            fontface = 2, alpha = 1.0, size = 5) +
-  annotate("text", x = x_high - .07, y = y_low,  label = "Dictacting the Pass",
+  annotate("text", x = x_high - .01, y = y_low,  label = "Dictacting the Pass",
            fontface = 2, alpha = 1.0, size = 5) +
   annotate("text", x = x_low + .03, y = y_high,  label = "Refusing to Pass",
            fontface = 2, alpha = 1.0, size = 5) +
@@ -92,7 +92,7 @@ base_plot <-
     x = "Pass Rate (Includes Scrambles & Sacks)",
     y = "Expected Pass Rate",
     caption = "Figure: @PatKerrane | Data: @nflfastR",
-    title = "2026 Pass Rate vs. Expected Pass Rate"
+    title = "2025 Pass Rate vs. Expected Pass Rate"
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
@@ -139,6 +139,7 @@ slugify <- function(x) {
 for (i in seq_len(nrow(pass_rates))) {
   team <- pass_rates$posteam[i]
   full <- if (!is.na(TEAM_NAMES[team])) TEAM_NAMES[[team]] else team
+  full <- sub("^.* ", "", full)   # drop city, keep nickname only
   one  <- pass_rates[i, , drop = FALSE]
 
   proe_r    <- round(one$proe  * 100)
