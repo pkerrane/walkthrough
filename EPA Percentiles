@@ -92,6 +92,9 @@ for (pl in unique(dat$player)) {
   long$rk    <- ave(long$value, long$wk, FUN = function(v) rank(-v, ties.method = "first"))
   lab_off    <- 4.5
   long$lab_y <- long$value + ifelse(long$rk == 1, lab_off, -lab_off)
+  # keep labels on the plot: flip any that would fall below 0 or above 100
+  long$lab_y <- ifelse(long$lab_y < 4,   long$value + lab_off, long$lab_y)
+  long$lab_y <- ifelse(long$lab_y > 100, long$value - lab_off, long$lab_y)
 
   p <- ggplot(long, aes(factor(wk), value, color = series, group = series)) +
     geom_line(linewidth = 1) +
