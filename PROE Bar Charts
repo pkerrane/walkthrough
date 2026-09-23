@@ -100,7 +100,8 @@ base_theme <- theme_minimal(base_size = 13) +
 
 # build one chart (both charts share this shape; only data/scale differ)
 build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
-                  tcol, title, ylims, ybreaks, outside_labels = FALSE) {
+                  tcol, title, ylims, ybreaks, outside_labels = FALSE,
+                  team_series = color_name) {
   nw <- length(week)                       # compute once, outside tibble()
   long <- tibble(
     wk_num = rep(week, 2),
@@ -114,7 +115,7 @@ build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
   # labels: OUTSIDE the bar, colored to match each bar (grey series -> grey,
   # team series -> team color), like the "against" chart; or white & inside.
   if (outside_labels) {
-    long$lab_col <- ifelse(as.character(long$series) == grey_name, "#3F3F3F", tcol)
+    long$lab_col <- ifelse(as.character(long$series) == team_series, tcol, "#3F3F3F")
     # ONE label layer (keeps dodge aligned even when a week's two bars have
     # opposite signs); nudge each label above/below its bar via lab_y.
     lab_df <- subset(long, !is.na(value))
@@ -142,8 +143,9 @@ build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
     { if (ylims[1] < 0) geom_hline(yintercept = 0, color = "black", linewidth = 0.6) } +
     geom_col(width = 0.82, position = pos, na.rm = TRUE) +
     labs_layer +
-    scale_fill_manual(values = setNames(c("#3F3F3F", tcol),
-                                        c(grey_name, color_name))) +
+    scale_fill_manual(values = setNames(
+      ifelse(c(grey_name, color_name) == team_series, tcol, "#3F3F3F"),
+      c(grey_name, color_name))) +
     scale_y_continuous(breaks = ybreaks, labels = function(z) paste0(z, "%")) +
     scale_x_discrete(drop = FALSE, expand = expansion(add = 0.6)) +
     coord_cartesian(ylim = ylims, clip = "off") +
@@ -195,7 +197,8 @@ for (abbr in TEAMS_TO_PLOT) {
   p1 <- build(wk, opp, d$PROE[1:n], d$P110[1:n],
               "PROE", "PROE on 1st-and-10", tcol,
               paste0(nick, ": Pass Rate over Expected by Week"),
-              c(-30, 30), seq(-30, 30, 10), outside_labels = TRUE)
+              c(-30, 30), seq(-30, 30, 10), outside_labels = TRUE,
+              team_series = "PROE")
   p2 <- build(wk, opp, d$XPR[1:n], d$PR[1:n],
               "Expected Pass Rate", "Pass Rate", tcol,
               paste0(nick, ": Expected Pass Rate vs. Pass Rate"),
