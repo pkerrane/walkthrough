@@ -174,14 +174,14 @@ def new_figure(subtitle=None, note=None):
     fig.text(0.5, 0.965, f"Week {wk} EPA per Game and Success Rate",
              ha="center", va="center", fontsize=20, fontweight="bold")
     if subtitle:
-        fig.text(0.5, 0.935, subtitle, ha="center", va="center",
-                 fontsize=15, fontweight="bold", color="black")
+        fig.text(0.5, 0.937, subtitle, ha="center", va="center",
+                 fontsize=16, fontweight="bold", color="black")
     if note:
-        fig.text(0.5, 0.910, note, ha="center", va="center",
-                 fontsize=15, fontweight="bold", color="black")
-    fig.text(0.015, 0.012, f"(bubble size = EPA/play, min {MINPLAYS} plays)",
-             ha="left", fontsize=11, color="#222222")
-    fig.text(0.985, 0.012, CREDIT, ha="right", fontsize=11, color="#222222")
+        fig.text(0.5, 0.913, note, ha="center", va="center",
+                 fontsize=14, fontweight="bold", color="black")
+    fig.text(0.015, 0.012, f"(bubble size = EPA per play, min {MINPLAYS} plays)",
+             ha="left", fontsize=11, color="black")
+    fig.text(0.985, 0.012, CREDIT, ha="right", fontsize=11, color="black")
     fig.subplots_adjust(left=0.05, right=0.97, top=0.9, bottom=0.06)
     return fig, ax, texts, sizes
 
@@ -200,11 +200,12 @@ def circle_one(idx: int, out_dir: Path):
     """One chart with QB #idx's bubble AND name enclosed by a black oval."""
     epa_rank = int(np.sum(EPAG > EPAG[idx])) + 1   # QB1 = highest EPA/game
     sr_rank  = int(np.sum(SR   > SR[idx]))   + 1   # QB1 = highest success rate
-    sub = (f"{full_name(NAMES[idx])}: EPA/Game {EPAG[idx]:.1f} (QB{epa_rank}), "
-           f"Success Rate {SR[idx]*100:.0f}% (QB{sr_rank})")
     epa_play_rank = int(np.sum(EPA_PLAY > EPA_PLAY[idx])) + 1   # QB1 = highest EPA/play
-    note = f"{full_name(NAMES[idx])}: EPA/play {EPA_PLAY[idx]:+.2f} (QB{epa_play_rank})"
-    fig, ax, texts, sizes = new_figure(subtitle=sub, note=note)
+    name  = full_name(NAMES[idx])
+    stats = (f"EPA/Game {EPAG[idx]:.1f} (QB{epa_rank}), "
+             f"EPA/play {EPA_PLAY[idx]:+.2f} (QB{epa_play_rank}), "
+             f"Success Rate {SR[idx]*100:.0f}% (QB{sr_rank})")
+    fig, ax, texts, sizes = new_figure(subtitle=name, note=stats)
 
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
