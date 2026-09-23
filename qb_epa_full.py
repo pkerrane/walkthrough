@@ -39,7 +39,7 @@ DBS      = round(0.8 * MINPLAYS)   # dropback floor = 80% of plays
 # output -> Walkthrough 26 / EPA Circled QBs  (absolute, so it doesn't depend on where you run it)
 _home    = os.environ.get("USERPROFILE") or os.path.expanduser("~")
 OUTPUT   = Path(_home) / "Documents" / "Walkthrough 26" / "EPA Circled QBs"
-CREDIT   = "Figure: @PatKerrane style  |  Data: @nflfastR"
+CREDIT   = "Figure: @PatKerrane  |  Data: @nflfastR"
 
 # Data arrays — filled by load_data() from the live pull.
 NAMES, SR, EPAG, EPA_PLAY, CPOE, COL = [], None, None, None, None, []
@@ -169,16 +169,17 @@ def new_figure(subtitle=None, note=None):
     texts, sizes = draw_base(ax)
     fig.text(0.5, 0.965, f"{SEASON} EPA per Game and Success Rate",
              ha="center", va="center", fontsize=20, fontweight="bold")
-    note_text = note if note else f"(bubble size = EPA per play, min {MINPLAYS} plays)"
+    note_text = note if note else "bubble size = EPA/play"
     if subtitle:
         fig.text(0.5, 0.935, subtitle, ha="center", va="center",
                  fontsize=15, fontweight="bold", color="black")
-        fig.text(0.5, 0.915, note_text,
-                 ha="center", va="center", fontsize=14, color="#333333")
+        fig.text(0.5, 0.910, note_text, ha="center", va="center",
+                 fontsize=15, fontweight="bold", color="black")
     else:
-        fig.text(0.5, 0.935, note_text,
-                 ha="center", va="center", fontsize=14, color="#333333")
-    fig.text(0.985, 0.012, CREDIT, ha="right", fontsize=11, color="#888888")
+        fig.text(0.5, 0.935, note_text, ha="center", va="center",
+                 fontsize=15, fontweight="bold", color="black")
+    fig.text(0.015, 0.012, f"min {MINPLAYS} plays", ha="left", fontsize=11, color="#555555")
+    fig.text(0.985, 0.012, CREDIT, ha="right", fontsize=11, color="#555555")
     fig.subplots_adjust(left=0.05, right=0.97, top=0.9, bottom=0.06)
     return fig, ax, texts, sizes
 
@@ -195,9 +196,13 @@ def save_base():
 
 def circle_one(idx: int, out_dir: Path):
     """One chart with QB #idx's bubble AND name enclosed by a black oval."""
-    sub = (f"{full_name(NAMES[idx])}: EPA/Game {EPAG[idx]:.1f}, "
-           f"Success Rate {SR[idx]*100:.0f}%")
-    note = f"(bubble size = EPA per play ({EPA_PLAY[idx]:+.2f}), min {MINPLAYS} plays)"
+    epa_rank = int(np.sum(EPAG > EPAG[idx])) + 1   # QB1 = highest EPA/game
+    sr_rank  = int(np.sum(SR   > SR[idx]))   + 1   # QB1 = highest success rate
+    sub = (f"{full_name(NAMES[idx])}: EPA/Game {EPAG[idx]:.1f} (QB{epa_rank}), "
+           f"Success Rate {SR[idx]*100:.0f}% (QB{sr_rank})")
+    epa_play_rank = int(np.sum(EPA_PLAY > EPA_PLAY[idx])) + 1   # QB1 = highest EPA/play
+    note = (f"bubble size = EPA/play.  {full_name(NAMES[idx])}: "
+            f"EPA/play {EPA_PLAY[idx]:+.2f} (QB{epa_play_rank})")
     fig, ax, texts, sizes = new_figure(subtitle=sub, note=note)
 
     fig.canvas.draw()
