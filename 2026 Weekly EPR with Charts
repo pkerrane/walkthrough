@@ -58,7 +58,7 @@ x_high <- max(pass_rates$pr); x_low <- min(pass_rates$pr)
 y_high <- max(pass_rates$xpr); y_low <- min(pass_rates$xpr)
 
 # symmetric x-range around PROE = 0 (equal on both sides, + room for logos)
-xlim_val <- max(abs(pass_rates$proe), na.rm = TRUE) + 0.02
+xlim_val <- max(abs(pass_rates$proe), na.rm = TRUE) + 0.01
 y_lo_lim <- y_low  - 0.02
 y_hi_lim <- y_high + 0.02
 
@@ -88,15 +88,15 @@ base_plot <-
              linetype = "dashed", alpha = 0.5) +
   geom_vline(xintercept = 0, color = "black",
              linetype = "dashed", alpha = 0.5) +
-  nflplotR::geom_nfl_logos(aes(team_abbr = posteam), width = 0.07, alpha = 1.0) +
-
-  # pass-rate value labels (collinear, white halo) + "Pass Rate" on the outer lines
+  # pass-rate value labels + "Pass Rate" tags, drawn UNDER the logos
   geom_label(data = lab_df, aes(x = x, y = y, label = paste0(round(c*100), "%")),
              inherit.aes = FALSE, fill = "white", label.size = 0,
              color = "#555555", size = 3) +
   geom_text(data = tag_df, aes(x = x, y = y, label = "Pass Rate"),
-            inherit.aes = FALSE, color = "#555555", size = 3, fontface = 3,
+            inherit.aes = FALSE, color = "#555555", size = 4.5, fontface = 3,
             angle = -45, vjust = 1) +
+
+  nflplotR::geom_nfl_logos(aes(team_abbr = posteam), width = 0.07, alpha = 1.0) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1),
                      breaks = scales::pretty_breaks(n = 8)) +
   scale_x_continuous(labels = function(x) paste0(ifelse(x > 0, "+", ""), sprintf("%.0f%%", x*100)),
@@ -122,7 +122,8 @@ base_plot <-
   ggplot2::theme(
     plot.title = ggplot2::element_text(size = 14, hjust = 0.5, face = "bold"),
     plot.subtitle = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold",
-                                          colour = "black")
+                                          colour = "black"),
+    panel.grid.minor = ggplot2::element_blank()
   )
 
 ggsave(file.path(OUT_DIR, "pr_vs_xpr.png"), plot = base_plot,
