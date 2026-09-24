@@ -59,11 +59,33 @@ y_midpoint <- (max(pass_rates$xpr) + min(pass_rates$xpr)) / 2
 y_high <- (max(pass_rates$xpr))
 y_low  <- (min(pass_rates$xpr))
 
+# symmetric x-range around PROE = 0 (equal on both sides, + room for logos)
+xlim_val <- max(abs(pass_rates$proe), na.rm = TRUE) + 0.02
+y_lo_lim <- y_low  - 0.02
+y_hi_lim <- y_high + 0.02
+
+# constant pass-rate diagonals: Pass Rate = PROE + Expected -> slope -1, intercept c
+pr_levels <- seq(0.45, 0.80, 0.05)
+# % labels ride ONE straight (slope +1) line, slid a bit below center -> collinear
+lab_b  <- mean(pass_rates$xpr) - 0.05
+lab_df <- data.frame(c = pr_levels)
+lab_df$x <- (lab_df$c - lab_b) / 2
+lab_df$y <- (lab_df$c + lab_b) / 2
+lab_df   <- lab_df[lab_df$x > -xlim_val & lab_df$x < xlim_val &
+                   lab_df$y > y_lo_lim  & lab_df$y < y_hi_lim, ]
+# "Pass Rate" tag at the top of the lowest & highest lines
+tag_df   <- data.frame(c = range(pr_levels))
+tag_df$x <- pmin(pmax(tag_df$c - y_hi_lim, -xlim_val + 0.02), xlim_val - 0.02)
+tag_df$y <- pmin(tag_df$c - tag_df$x, y_hi_lim - 0.004)
+
 # =====================================================================
 # BASE CHART  (your figure, defined once so the batch can reuse it)
 # =====================================================================
 base_plot <-
   ggplot2::ggplot(pass_rates, aes(x = proe, y = xpr)) +
+
+  # constant pass-rate diagonals (under the logos)
+  geom_abline(slope = -1, intercept = pr_levels, color = "#cfcfcf", linewidth = 0.5) +
 
   # horizontal line with mean
   geom_hline(yintercept = mean(pass_rates$xpr), color = "black",
@@ -74,10 +96,19 @@ base_plot <-
 
   nflplotR::geom_nfl_logos(aes(team_abbr = posteam), width = 0.07, alpha = 1.0) +
 
+  # pass-rate value labels (collinear, white halo) + "Pass Rate" on the outer lines
+  geom_label(data = lab_df, aes(x = x, y = y, label = paste0(round(c*100), "%")),
+             inherit.aes = FALSE, fill = "white", label.size = 0,
+             color = "#555555", size = 3) +
+  geom_text(data = tag_df, aes(x = x, y = y, label = "Pass Rate"),
+            inherit.aes = FALSE, color = "#555555", size = 3, fontface = 3,
+            angle = -45, vjust = 1) +
+
   scale_y_continuous(labels = scales::percent_format(accuracy = 1),
                      breaks = scales::pretty_breaks(n = 8)) +
   scale_x_continuous(labels = function(x) paste0(ifelse(x > 0, "+", ""), sprintf("%.0f%%", x*100)),
                      breaks = scales::pretty_breaks(n = 8)) +
+  coord_cartesian(xlim = c(-xlim_val, xlim_val), ylim = c(y_lo_lim, y_hi_lim)) +
 
   # quadrant labels pinned to the panel corners, aligned inward so they
   # never get clipped by a team sitting at the edge
