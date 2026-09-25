@@ -12,7 +12,7 @@ library(dplyr)
 library(nflfastR)
 library(nflplotR)
 
-wk <- 1                 # <-- set the week you want, then run
+wk <- 3                 # <-- set the week you want, then run
 
 # ---- tunables for the rings ----------------------------------------
 CIRCLE_SIZE   <- 30
