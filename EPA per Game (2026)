@@ -6,10 +6,10 @@ library(dplyr)
 
 options(scipen = 9999)
 
-pbp <- load_pbp(2025)
+pbp <- load_pbp(2026)
 
-minplays <- 200
-dbs <- 200
+minplays <- 10
+dbs <- 10
 
 
 qbs <- pbp %>%
@@ -49,7 +49,7 @@ qbs <- pbp %>%
 #vertical line with mean SR, can use = .45, or = .46, if preferred to = means(qbs$sr),
   geom_vline(xintercept =  .45, color = "black", linetype = "dashed", alpha=0.9) +
 
-#horizontal line with 2019:2025 max EPA
+#horizontal line with 2019:2026 max EPA
   #geom_hline(yintercept = 15, color = "green3", linetype = "dashed", alpha=0.99) +
 
 #horizontal line with mean EPA
@@ -78,7 +78,7 @@ qbs <- pbp %>%
   #titles and caption
   labs(x = "Success Rate",
        y = "EPA per Game",
-       title = "2025 EPA per Game and Success Rate",
+       title = "2026 EPA per Game and Success Rate",
        subtitle = paste0("(bubble size = CPOE, min ", minplays, " plays)"),
        
          
