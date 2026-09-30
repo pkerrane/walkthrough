@@ -33,26 +33,30 @@ dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
 # =====================================================================
 pbp <- nflfastR::load_pbp(seasons = 2026)
 
-pass_rates <- pbp %>%
-  add_xpass() %>%
+# expected pass rate computed ONCE on the full play-by-play, THEN filtered.
+# (Filtering before add_xpass() leaves most plays with no expected value and
+#  produces bad PROE numbers -- that was the 1st-and-10 bug.)
+px <- add_xpass(pbp)
+
+pass_rates <- px %>%
   filter(week == wk) %>%
   group_by(posteam) %>%
   summarize(proe = mean(pass_oe, na.rm = TRUE), xpr = mean(xpass, na.rm = TRUE)) %>%
   mutate(proe = proe/100) %>%
   filter(!is.na(posteam))
 
-proe1 <- pbp %>%
-  filter(down == 1, ydstogo == 10, week == wk) %>%
-  add_xpass() %>%
+proe1 <- px %>%
+  filter(week == wk, down == 1, ydstogo == 10) %>%
   group_by(posteam) %>%
-  summarize(proe = mean(pass_oe, na.rm = TRUE)) %>%
-  mutate(proe = proe/100) %>%
+  summarize(proe1 = mean(pass_oe, na.rm = TRUE)) %>%
+  mutate(proe1 = proe1/100) %>%
   filter(!is.na(posteam))
+
+# join 1st-and-10 PROE BY TEAM (not row position)
+pass_rates <- dplyr::left_join(pass_rates, proe1, by = "posteam")
 
 colnms = c("proe", "xpr")
 pass_rates$pr <- rowSums(pass_rates[, colnms])
-# align 1st-and-10 by team (weekly byes mean the tables can differ)
-pass_rates$proe1 <- proe1$proe[match(pass_rates$posteam, proe1$posteam)]
 
 x_high <- max(pass_rates$pr); x_low <- min(pass_rates$pr)
 y_high <- max(pass_rates$xpr); y_low <- min(pass_rates$xpr)
