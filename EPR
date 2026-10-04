@@ -1,99 +1,112 @@
-#ALL PROE
+# =====================================================================
+# PROE vs. Expected Pass Rate  —  NO-SAVE version
+# =====================================================================
+# Computes the data (matches RBSDM), displays the chart in the plot pane,
+# and copies the pass_rates table to your clipboard.
+# It writes NO PNG files and creates/opens no folders.
+# =====================================================================
 
-# load relevant libraries
- 
 library(tidyverse)
- 
 library(dplyr)
- 
 library(nflfastR)
- 
- 
+library(nflplotR)
+
+# =====================================================================
+# DATA  (RBSDM-matched: add_xpass once on full pbp, join 1st-and-10 by team)
+# =====================================================================
 pbp <- nflfastR::load_pbp(seasons = 2026)
- 
- 
-pass_rates <- pbp %>%  
- 
- add_xpass() %>% 
- 
- group_by(posteam) %>% 
- 
- summarize(proe = mean(pass_oe, na.rm = TRUE), xpr = mean(xpass, na.rm = TRUE)) %>% 
- 
- mutate(proe = proe/100) %>%
- 
- filter(!is.na(posteam))
+px  <- add_xpass(pbp)
 
-proe1 <- pbp %>% 
-filter(down == 1, ydstogo == 10) %>% 
- 
- add_xpass() %>% 
- 
- group_by(posteam) %>% 
- 
- summarize(proe = mean(pass_oe, na.rm = TRUE)) %>% 
- 
- mutate(proe = proe/100) %>% 
- 
- filter(!is.na(posteam))
+pass_rates <- px %>%
+  group_by(posteam) %>%
+  summarize(proe = mean(pass_oe, na.rm = TRUE), xpr = mean(xpass, na.rm = TRUE)) %>%
+  mutate(proe = proe/100) %>%
+  filter(!is.na(posteam))
 
- 
-colnms=c("proe", "xpr")
-pass_rates$pr <- rowSums(pass_rates[,colnms])
-pass_rates$proe1 <- proe1$proe
+proe1 <- px %>%
+  filter(down == 1, ydstogo == 10) %>%
+  group_by(posteam) %>%
+  summarize(proe1 = mean(pass_oe, na.rm = TRUE)) %>%
+  mutate(proe1 = proe1/100) %>%
+  filter(!is.na(posteam))
 
-x_midpoint <- (max(pass_rates$pr) + min(pass_rates$pr)) / 2
-x_high <- (max(pass_rates$pr)) 
-x_low <- (min(pass_rates$pr))
+pass_rates <- dplyr::left_join(pass_rates, proe1, by = "posteam")
 
-y_midpoint <- (max(pass_rates$xpr) + min(pass_rates$xpr)) / 2
-y_high <- (max(pass_rates$xpr))
-y_low <- (min(pass_rates$xpr))
+colnms = c("proe", "xpr")
+pass_rates$pr <- rowSums(pass_rates[, colnms])
+pass_rates <- dplyr::relocate(pass_rates, pr, .after = xpr)   # posteam, proe, xpr, pr, proe1
 
+y_high <- max(pass_rates$xpr); y_low <- min(pass_rates$xpr)
 
-# make figure
-pr <- pass_rates$pr
-xpr <- pass_rates$xpr
-pass_rates %>%
-  dplyr::inner_join(pass_rates, by = "posteam") %>%
-  ggplot2::ggplot(aes(x = pr, y = xpr)) +
+# symmetric x-range around PROE = 0 (equal on both sides, + room for logos)
+xlim_val <- max(abs(pass_rates$proe), na.rm = TRUE) + 0.01
+y_lo_lim <- y_low  - 0.02
+y_hi_lim <- y_high + 0.02
 
- 
-  
-  # nflplotR magic
-  
- 
-  
-  #nflplotR::geom_mean_lines(aes(v_var = pr, h_var = xpr), color = 'black')+
-  
-  #horizontal line with mean 
-  geom_hline(yintercept = mean(xpr), color = "black", linetype = "dashed", alpha=0.5) +
-  
-  #vertical line with mean - should be PR but changed to xpr for consistency
-  geom_vline(xintercept =  mean(pr), color = "black", linetype = "dashed", alpha=0.5) +
-       
+# constant pass-rate diagonals: Pass Rate = PROE + Expected -> slope -1, intercept c
+pr_levels <- seq(0.45, 0.80, 0.05)
+lab_b  <- mean(pass_rates$xpr) - 0.05
+lab_df <- data.frame(c = pr_levels)
+lab_df$x <- (lab_df$c - lab_b) / 2
+lab_df$y <- (lab_df$c + lab_b) / 2
+lab_df   <- lab_df[lab_df$x > -xlim_val & lab_df$x < xlim_val &
+                   lab_df$y > y_lo_lim  & lab_df$y < y_hi_lim, ]
+tag_df   <- data.frame(c = min(pr_levels))
+tag_df$x <- -xlim_val * 0.5
+tag_df$y <- tag_df$c - tag_df$x
+
+# =====================================================================
+# CHART
+# =====================================================================
+base_plot <-
+  ggplot2::ggplot(pass_rates, aes(x = proe, y = xpr)) +
+
+  geom_abline(slope = -1, intercept = pr_levels, color = "#cfcfcf", linewidth = 0.5) +
+
+  geom_hline(yintercept = mean(pass_rates$xpr), color = "black",
+             linetype = "dashed", alpha = 0.5) +
+  geom_vline(xintercept = 0, color = "black",
+             linetype = "dashed", alpha = 0.5) +
+
+  geom_label(data = lab_df, aes(x = x, y = y, label = paste0(round(c*100), "%")),
+             inherit.aes = FALSE, fill = "white", label.size = 0,
+             color = "#555555", size = 3) +
+  geom_text(data = tag_df, aes(x = x, y = y, label = "Pass Rate"),
+            inherit.aes = FALSE, color = "#555555", size = 4.5, fontface = 2) +
+
   nflplotR::geom_nfl_logos(aes(team_abbr = posteam), width = 0.07, alpha = 1.0) +
-  
-  scale_y_continuous(labels = scales::percent_format(accuracy=1),
-                     breaks = scales::pretty_breaks(n=8)) + 
-  scale_x_continuous(labels = scales::percent_format(accuracy=1),
-                     breaks = scales::pretty_breaks(n=8)) + 
-  
-   annotate("text", x = x_high -.01, y = y_high, label = "Passing in Passing Game Scripts", fontface = 2, alpha = 1.0, size = 5)+
-  annotate("text", x = x_high -.01, y = y_low, label = "Dictacting the Pass", fontface = 2, alpha = 1.0, size = 5)+
-  annotate("text", x = x_low + .03, y = y_high, label = "Refusing to Pass", fontface = 2, alpha = 1.0, size = 5)+
-  annotate("text", x = x_low + .03, y = y_low, label = "Dictating the Run", fontface = 2, alpha = 1.0, size = 5)+
-  
+
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                     breaks = scales::pretty_breaks(n = 8)) +
+  scale_x_continuous(labels = function(x) paste0(ifelse(x > 0, "+", ""), sprintf("%.0f%%", x*100)),
+                     breaks = scales::pretty_breaks(n = 8)) +
+  coord_cartesian(xlim = c(-xlim_val, xlim_val), ylim = c(y_lo_lim, y_hi_lim)) +
+
+  annotate("text", x = -Inf, y =  Inf, hjust = -0.04, vjust =  1.4,
+           label = "Refusing to Pass", fontface = 2, size = 5) +
+  annotate("text", x =  Inf, y =  Inf, hjust =  1.04, vjust =  1.4,
+           label = "Passing in Passing Game Scripts", fontface = 2, size = 5) +
+  annotate("text", x = -Inf, y = -Inf, hjust = -0.04, vjust = -0.4,
+           label = "Dictating the Run", fontface = 2, size = 5) +
+  annotate("text", x =  Inf, y = -Inf, hjust =  1.04, vjust = -0.4,
+           label = "Dictacting the Pass", fontface = 2, size = 5) +
+
   ggplot2::labs(
-    x = "Pass Rate (Includes Scrambles & Sacks)",
+    x = "Pass Rate Over Expected (PROE)",
     y = "Expected Pass Rate",
     caption = "Figure: @PatKerrane | Data: @nflfastR",
-    title = "2026 Pass Rate vs. Expected Pass Rate"
+    title = "2026 PROE vs. Expected Pass Rate"
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(
-    plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold")
-  ) 
+    plot.title = ggplot2::element_text(size = 14, hjust = 0.5, face = "bold"),
+    plot.subtitle = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold",
+                                          colour = "black"),
+    panel.grid.minor = ggplot2::element_blank()
+  )
 
+# show the chart in the plot pane (no file written)
+print(base_plot)
+
+# copy the table to the clipboard for your spreadsheet
 clipr::write_clip(pass_rates)
-
