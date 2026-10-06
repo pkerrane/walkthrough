@@ -61,9 +61,9 @@ dat <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# keep this season, real players, and rows that have at least one value
+# keep this season, rows with a full name (col Y = source of truth), and data
 dat <- dat[dat$year == as.character(SEASON) &
-           dat$player != "" &
+           dat$full != "" &
            (!is.na(dat$epa_pct) | !is.na(dat$sr_pct)), ]
 
 slugify <- function(x) {
@@ -72,14 +72,11 @@ slugify <- function(x) {
 
 dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
 
-# ---- one chart per player -------------------------------------------
-for (pl in unique(dat$player)) {
-  d <- dat[dat$player == pl, ]
+# ---- one chart per full name (col Y = source of truth) --------------
+# keying on the full name (not the abbreviation) keeps two "J.Daniels" apart
+for (pl_name in unique(dat$full)) {
+  d <- dat[dat$full == pl_name, ]
   d$wk <- seq_len(nrow(d))                       # sheet order = week order
-
-  # full name (col Y) for the title & file name; fall back to the abbreviation
-  fulls   <- d$full[d$full != ""]
-  pl_name <- if (length(fulls) > 0) fulls[1] else pl
 
   long <- rbind(
     data.frame(wk = d$wk, series = "Success Rate Percentile", value = d$sr_pct),
