@@ -11,7 +11,7 @@ library(dplyr)
 library(nflfastR)
 library(nflplotR)
 
-wk <- 4                 # <-- set the week you want, then run
+wk <- 5                 # <-- set the week you want, then run
 
 # =====================================================================
 # DATA  (RBSDM-matched: add_xpass once on full pbp, then filter to the week)
