@@ -45,13 +45,14 @@ OUTPUT   = Path(_home) / "Documents" / "Walkthrough 26" / "Weekly EPA Circled QB
 CREDIT   = "Figure: @PatKerrane  |  Data: @nflfastR"
 
 # Data arrays — filled by load_data() from the live pull.
-NAMES, SR, EPAG, EPA_PLAY, CPOE, COL = [], None, None, None, None, []
+NAMES, SR, EPAG, EPA_PLAY, CPOE, COL, IDS = [], None, None, None, None, [], []
+FULL_BY_ID = {}
 
 # ---------------------------------------------------------------------------
 # DATA  (your R dplyr pipeline, translated to pandas)
 # ---------------------------------------------------------------------------
 def load_data():
-    global NAMES, SR, EPAG, EPA_PLAY, CPOE, COL
+    global NAMES, SR, EPAG, EPA_PLAY, CPOE, COL, IDS, FULL_BY_ID
     import nflreadpy as nfl
 
     pbp = nfl.load_pbp([SEASON]).to_pandas()
@@ -80,6 +81,12 @@ def load_data():
     teams = nfl.load_teams().to_pandas()[["team_abbr", "team_color"]]
     qbs = qbs.merge(teams, left_on="team", right_on="team_abbr", how="left")
 
+    # full names from the player table, keyed on the UNIQUE player id (gsis_id).
+    # this fixes name collisions like two "J.Daniels".
+    players = nfl.load_players().to_pandas()
+    FULL_BY_ID = dict(zip(players["gsis_id"], players["display_name"]))
+
+    IDS      = qbs["id"].tolist()
     NAMES    = qbs["name"].tolist()
     SR       = qbs["sr"].to_numpy()
     EPAG     = qbs["epa_g"].to_numpy()
@@ -120,8 +127,14 @@ FULL_NAMES = {
     "T.Shough": "Tyler Shough",
 }
 
-def full_name(abbr: str) -> str:
-    return FULL_NAMES.get(abbr, abbr)
+def full_name(idx_or_abbr):
+    # by index -> look up the unique player id; fall back to dict, then abbr
+    if isinstance(idx_or_abbr, (int, np.integer)):
+        pid  = IDS[idx_or_abbr]
+        abbr = NAMES[idx_or_abbr]
+        return FULL_BY_ID.get(pid) or FULL_NAMES.get(abbr, abbr)
+    # by abbreviation (legacy callers)
+    return FULL_NAMES.get(idx_or_abbr, idx_or_abbr)
 
 def slugify(name: str) -> str:
     name = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
@@ -201,7 +214,7 @@ def circle_one(idx: int, out_dir: Path):
     epa_rank = int(np.sum(EPAG > EPAG[idx])) + 1   # QB1 = highest EPA/game
     sr_rank  = int(np.sum(SR   > SR[idx]))   + 1   # QB1 = highest success rate
     epa_play_rank = int(np.sum(EPA_PLAY > EPA_PLAY[idx])) + 1   # QB1 = highest EPA/play
-    name  = full_name(NAMES[idx])
+    name  = full_name(idx)
     stats = (f"EPA/Game {EPAG[idx]:.1f} (QB{epa_rank}), "
              f"EPA/play {EPA_PLAY[idx]:+.2f} (QB{epa_play_rank}), "
              f"Success Rate {SR[idx]*100:.0f}% (QB{sr_rank})")
@@ -223,17 +236,18 @@ def circle_one(idx: int, out_dir: Path):
     ax.add_patch(Ellipse((cx, cy), width=width, height=height, fill=False,
                          edgecolor="black", linewidth=3.2, zorder=6,
                          transform=IdentityTransform(), clip_on=False))
-    p = out_dir / f"{slugify(full_name(NAMES[idx]))}.png"
+    p = out_dir / f"{slugify(full_name(idx))}.png"
     fig.savefig(p, dpi=100, facecolor="white")
     plt.close(fig)
     return p
 
 
 def circle_all():
-    missing = [n for n in NAMES if n not in FULL_NAMES]
+    missing = [NAMES[i] for i in range(len(NAMES))
+               if not FULL_BY_ID.get(IDS[i]) and NAMES[i] not in FULL_NAMES]
     if missing:
-        print("  ! no full name mapped for: " + ", ".join(missing))
-        print("    (files use the abbreviated name — add them to FULL_NAMES)")
+        print("  ! no full name found for: " + ", ".join(missing))
+        print("    (files use the abbreviated name)")
     out_dir = OUTPUT
     out_dir.mkdir(parents=True, exist_ok=True)
     made = [circle_one(i, out_dir) for i in range(len(NAMES))]
