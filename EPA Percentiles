@@ -76,6 +76,7 @@ dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
 # keying on the full name (not the abbreviation) keeps two "J.Daniels" apart
 for (pl_name in unique(dat$full)) {
   d <- dat[dat$full == pl_name, ]
+  if (nrow(d) < 2) next                          # skip one-week players (no line to draw)
   d$wk <- seq_len(nrow(d))                       # sheet order = week order
 
   long <- rbind(
@@ -114,7 +115,7 @@ for (pl_name in unique(dat$full)) {
 
   ggsave(file.path(OUT_DIR, paste0(slugify(pl_name), ".png")),
          p, width = 11, height = 6, dpi = 200, bg = "white")
-  message("wrote ", pl)
+  message("wrote ", pl_name)
 }
 
 message("\nDone. Charts in: ", normalizePath(OUT_DIR))
