@@ -63,7 +63,7 @@ def load_data():
 
     d = d.copy()
     # rushing EPA: designed runs (rush==1) + scrambles (qb_scramble==1) count as rushing
-    d["_rush_epa"] = np.where((d["rush"] == 1) | (d["qb_scramble"] == 1), d["epa"], 0.0)
+    d["_rush_epa"] = np.where((d["rush"] == 1) | (d["qb_scramble"] == 1), d["qb_epa"], 0.0)
 
     qbs = (
         d.groupby(["id", "name"], dropna=True)
