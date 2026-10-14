@@ -31,15 +31,30 @@ from matplotlib.transforms import IdentityTransform
 # ---------------------------------------------------------------------------
 YEAR = 2026        # <-- set the season here (or override on the command line with --year)
 
-# command line: py qb_epa_weeks.py <week...> [--year 2026] [--minplays 10]
+# command line: py qb_epa_weeks.py <weeks> [--year 2026] [--minplays N]
+#   weeks can be separate numbers or ranges:  4 5   |   1-3   |   1-3 5 8-9
 _ap = argparse.ArgumentParser()
-_ap.add_argument("weeks", nargs="+", type=int, help="week(s) to include, e.g. 4 5")
+_ap.add_argument("weeks", nargs="+", help="week(s): e.g. '4 5' or '1-3' or '1-3 5'")
 _ap.add_argument("--year", type=int, default=YEAR, help=f"season (default {YEAR})")
-_ap.add_argument("--minplays", type=int, default=10, help="min plays/dropbacks to qualify (default 10)")
+_ap.add_argument("--minplays", type=int, default=None,
+                 help="min plays to qualify (default 10 x number of weeks)")
 _args = _ap.parse_args()
-WEEKS    = sorted(set(_args.weeks))
+
+def _parse_weeks(tokens):
+    out = []
+    for t in tokens:
+        t = str(t).strip()
+        if "-" in t:                       # a range like 1-3
+            a, b = t.split("-")
+            out.extend(range(int(a), int(b) + 1))
+        else:
+            out.append(int(t))
+    return sorted(set(out))
+
+WEEKS    = _parse_weeks(_args.weeks)
 SEASON   = _args.year
-MINPLAYS = _args.minplays
+# default min plays scales with the span: 10 per week unless overridden
+MINPLAYS = _args.minplays if _args.minplays is not None else 10 * len(WEEKS)
 
 def _weeks_label(ws, sep):
     if len(ws) == 1:
