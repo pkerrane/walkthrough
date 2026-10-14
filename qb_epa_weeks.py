@@ -73,19 +73,24 @@ CREDIT   = "Figure: @PatKerrane  |  Data: @nflfastR"
 
 # Data arrays — filled by load_data() from the live pull.
 NAMES, SR, EPAG, EPA_PLAY, CPOE, COL, IDS = [], None, None, None, None, [], []
+RUSH_EPA_G = None
 FULL_BY_ID = {}
 
 # ---------------------------------------------------------------------------
 # DATA  (your R dplyr pipeline, translated to pandas)
 # ---------------------------------------------------------------------------
 def load_data():
-    global NAMES, SR, EPAG, EPA_PLAY, CPOE, COL, IDS, FULL_BY_ID
+    global NAMES, SR, EPAG, EPA_PLAY, CPOE, COL, IDS, FULL_BY_ID, RUSH_EPA_G
     import nflreadpy as nfl
 
     pbp = nfl.load_pbp([SEASON]).to_pandas()
     # exclude QB kneels and spikes so EPA/SR match RBSDM
     d = pbp[pbp["epa"].notna() & (pbp["qb_kneel"] != 1) & (pbp["qb_spike"] != 1)
             & (pbp["week"].isin(WEEKS))]
+
+    d = d.copy()
+    # rushing EPA: designed runs (rush==1) + scrambles (qb_scramble==1) count as rushing
+    d["_rush_epa"] = np.where((d["rush"] == 1) | (d["qb_scramble"] == 1), d["epa"], 0.0)
 
     qbs = (
         d.groupby(["id", "name"], dropna=True)
@@ -96,11 +101,13 @@ def load_data():
              g=("game_id", "nunique"),
              n_dropbacks=("pass", "sum"),
              n_plays=("epa", "size"),         # n() = rows in the group
+             rush_epa_sum=("_rush_epa", "sum"),
              team=("posteam", "last"),
          )
          .reset_index()
     )
     qbs["epa_g"] = qbs["epa"] * qbs["n_plays"] / qbs["g"]   # EPA per game
+    qbs["rush_epa_g"] = qbs["rush_epa_sum"] / qbs["g"]      # rushing EPA per game (scrambles incl.)
     qbs = qbs[(qbs["n_dropbacks"] >= DBS) &
               (qbs["n_plays"] >= MINPLAYS)].reset_index(drop=True)
 
@@ -118,6 +125,7 @@ def load_data():
     SR       = qbs["sr"].to_numpy()
     EPAG     = qbs["epa_g"].to_numpy()
     EPA_PLAY = qbs["epa"].to_numpy()
+    RUSH_EPA_G = qbs["rush_epa_g"].to_numpy()
     CPOE     = qbs["cpoe"].to_numpy()
     COL      = qbs["team_color"].fillna("#666666").tolist()
     print(f"{len(NAMES)} QBs qualified (>= {DBS} dropbacks, {MINPLAYS} plays)")
@@ -172,8 +180,8 @@ def slugify(name: str) -> str:
 # ---------------------------------------------------------------------------
 def bubble_sizes():
     """Map EPA per play -> marker area (bigger bubble = higher EPA/play)."""
-    lo, hi = EPA_PLAY.min(), EPA_PLAY.max()
-    return np.interp(EPA_PLAY, [lo, hi], [140, 1700])
+    lo, hi = RUSH_EPA_G.min(), RUSH_EPA_G.max()
+    return np.interp(RUSH_EPA_G, [lo, hi], [140, 1700])
 
 
 def draw_base(ax):
@@ -219,7 +227,7 @@ def new_figure(subtitle=None, note=None):
     if note:
         fig.text(0.5, 0.913, note, ha="center", va="center",
                  fontsize=14, fontweight="bold", color="black")
-    fig.text(0.015, 0.012, f"(bubble size = EPA per play, min {MINPLAYS} plays)",
+    fig.text(0.015, 0.012, f"(bubble size = rushing EPA/game incl. scrambles, min {MINPLAYS} plays)",
              ha="left", fontsize=11, color="black")
     fig.text(0.985, 0.012, CREDIT, ha="right", fontsize=11, color="black")
     fig.subplots_adjust(left=0.05, right=0.97, top=0.9, bottom=0.06)
@@ -240,10 +248,12 @@ def circle_one(idx: int, out_dir: Path):
     """One chart with QB #idx's bubble AND name enclosed by a black oval."""
     epa_rank = int(np.sum(EPAG > EPAG[idx])) + 1   # QB1 = highest EPA/game
     sr_rank  = int(np.sum(SR   > SR[idx]))   + 1   # QB1 = highest success rate
+    rush_rank = int(np.sum(RUSH_EPA_G > RUSH_EPA_G[idx])) + 1   # QB1 = highest rushing EPA/game
     epa_play_rank = int(np.sum(EPA_PLAY > EPA_PLAY[idx])) + 1   # QB1 = highest EPA/play
     name  = full_name(idx)
     stats = (f"EPA/Game {EPAG[idx]:.1f} (QB{epa_rank}), "
              f"EPA/play {EPA_PLAY[idx]:+.2f} (QB{epa_play_rank}), "
+             f"Rush EPA/G {RUSH_EPA_G[idx]:+.1f} (QB{rush_rank}), "
              f"Success Rate {SR[idx]*100:.0f}% (QB{sr_rank})")
     fig, ax, texts, sizes = new_figure(subtitle=name, note=stats)
 
