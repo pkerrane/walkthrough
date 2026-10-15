@@ -79,6 +79,11 @@ def load_data():
     import nflreadpy as nfl
 
     pbp = nfl.load_pbp(SEASONS).to_pandas().reset_index(drop=True)
+    # keep only the columns this chart needs (full pbp is 200+ cols; this
+    # avoids a memory blow-up when pooling several seasons)
+    keep = ["id", "name", "posteam", "game_id", "epa", "qb_epa", "cpoe",
+            "success", "pass", "rush", "qb_scramble", "qb_kneel", "qb_spike"]
+    pbp = pbp[[c for c in keep if c in pbp.columns]]
     # exclude QB kneels and spikes so EPA/SR match RBSDM
     d = pbp[pbp["epa"].notna() & (pbp["qb_kneel"] != 1) & (pbp["qb_spike"] != 1)]
 
