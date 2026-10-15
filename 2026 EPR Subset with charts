@@ -14,7 +14,7 @@ library(nflfastR)
 library(nflplotR)
 
 YEAR  <- 2026           # <-- season
-WEEKS <- 1:2            # <-- weeks to include (e.g. 4:5, c(4, 6), c(1, 2, 3))
+WEEKS <- 3:5            # <-- weeks to include (e.g. 4:5, c(4, 6), c(1, 2, 3))
 
 WEEKS <- sort(unique(as.integer(WEEKS)))
 weeks_label <- function(ws, sep) {
