@@ -78,7 +78,7 @@ def load_data():
     global NAMES, SR, EPAG, EPA_PLAY, CPOE, COL, IDS, FULL_BY_ID, RUSH_EPA_G
     import nflreadpy as nfl
 
-    pbp = nfl.load_pbp(SEASONS).to_pandas()
+    pbp = nfl.load_pbp(SEASONS).to_pandas().reset_index(drop=True)
     # exclude QB kneels and spikes so EPA/SR match RBSDM
     d = pbp[pbp["epa"].notna() & (pbp["qb_kneel"] != 1) & (pbp["qb_spike"] != 1)]
 
