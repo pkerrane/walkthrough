@@ -1,0 +1,209 @@
+# =====================================================================
+# MULTI-WEEK Expected Pass Rate vs. Pass Rate — circle each team
+# =====================================================================
+# One PNG per team with that team ringed, over a SET of weeks you choose.
+# Set YEAR and WEEKS below, run. WEEKS accepts R ranges and lists:
+#   WEEKS <- 4:5     WEEKS <- c(4, 6)     WEEKS <- c(1, 2, 3)
+# Titles it "Weeks 4-5" (a range if consecutive, else a list) and saves to:
+#   Walkthrough 26 / Multi-Week Expected Pass Circled Teams / Weeks 4-5/
+# =====================================================================
+
+library(tidyverse)
+library(dplyr)
+library(nflfastR)
+library(nflplotR)
+
+YEAR  <- 2026           # <-- season
+WEEKS <- 1:2            # <-- weeks to include (e.g. 4:5, c(4, 6), c(1, 2, 3))
+
+WEEKS <- sort(unique(as.integer(WEEKS)))
+weeks_label <- function(ws, sep) {
+  if (length(ws) == 1) return(paste0("Week ", ws))
+  if (length(ws) == (max(ws) - min(ws) + 1))        # consecutive -> a range
+    return(paste0("Weeks ", min(ws), "-", max(ws)))
+  paste0("Weeks ", paste(ws, collapse = sep))
+}
+WK_LABEL  <- weeks_label(WEEKS, ", ")   # for the title
+WK_FOLDER <- weeks_label(WEEKS, "_")    # for the folder name
+
+# ---- tunables for the rings ----------------------------------------
+CIRCLE_SIZE   <- 30
+CIRCLE_STROKE <- 1.8
+
+# ---- output: Walkthrough 26 / Multi-Week Expected Pass Circled Teams / <weeks>
+OUT_DIR <- if (.Platform$OS.type == "windows") {
+  file.path("C:/Users/patri/Documents/Walkthrough 26",
+            "Multi-Week Expected Pass Circled Teams", WK_FOLDER)
+} else {
+  file.path(path.expand("~/Downloads"),
+            "Multi-Week Expected Pass Circled Teams", WK_FOLDER)
+}
+dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
+
+# =====================================================================
+# DATA  (filtered to the chosen week)
+# =====================================================================
+pbp <- nflfastR::load_pbp(seasons = YEAR)
+
+# expected pass rate computed ONCE on the full play-by-play, THEN filtered.
+# (Filtering before add_xpass() leaves most plays with no expected value and
+#  produces bad PROE numbers -- that was the 1st-and-10 bug.)
+px <- add_xpass(pbp)
+
+pass_rates <- px %>%
+  filter(week %in% WEEKS) %>%
+  group_by(posteam) %>%
+  summarize(proe = mean(pass_oe, na.rm = TRUE), xpr = mean(xpass, na.rm = TRUE)) %>%
+  mutate(proe = proe/100) %>%
+  filter(!is.na(posteam))
+
+proe1 <- px %>%
+  filter(week %in% WEEKS, down == 1, ydstogo == 10) %>%
+  group_by(posteam) %>%
+  summarize(proe1 = mean(pass_oe, na.rm = TRUE)) %>%
+  mutate(proe1 = proe1/100) %>%
+  filter(!is.na(posteam))
+
+# join 1st-and-10 PROE BY TEAM (not row position)
+pass_rates <- dplyr::left_join(pass_rates, proe1, by = "posteam")
+
+colnms = c("proe", "xpr")
+pass_rates$pr <- rowSums(pass_rates[, colnms])
+# keep the original column order (posteam, proe, xpr, pr, proe1) for the clipboard/paste
+pass_rates <- dplyr::relocate(pass_rates, pr, .after = xpr)
+
+x_high <- max(pass_rates$pr); x_low <- min(pass_rates$pr)
+y_high <- max(pass_rates$xpr); y_low <- min(pass_rates$xpr)
+
+# symmetric x-range around PROE = 0 (equal on both sides, + room for logos)
+xlim_val <- max(abs(pass_rates$proe), na.rm = TRUE) + 0.01
+y_lo_lim <- y_low  - 0.02
+y_hi_lim <- y_high + 0.02
+
+# constant pass-rate diagonals: Pass Rate = PROE + Expected -> slope -1, intercept c
+pr_levels <- seq(0.45, 0.80, 0.05)
+# % labels ride ONE straight (slope +1) line, slid a bit below center -> collinear
+lab_b  <- mean(pass_rates$xpr) - 0.05
+lab_df <- data.frame(c = pr_levels)
+lab_df$x <- (lab_df$c - lab_b) / 2
+lab_df$y <- (lab_df$c + lab_b) / 2
+lab_df   <- lab_df[lab_df$x > -xlim_val & lab_df$x < xlim_val &
+                   lab_df$y > y_lo_lim  & lab_df$y < y_hi_lim, ]
+# "Pass Rate" tag at the top of the lowest & highest lines
+# "Pass Rate" tag: anchored to the VISIBLE window (lower-left, just above the
+# bottom) and left-aligned, so it never clips as the PROE band narrows
+tag_df   <- data.frame(x = -xlim_val + 0.005,
+                       y = y_lo_lim + 0.13 * (y_hi_lim - y_lo_lim))
+
+# =====================================================================
+# BASE CHART
+# =====================================================================
+base_plot <-
+  ggplot2::ggplot(pass_rates, aes(x = proe, y = xpr)) +
+
+  # constant pass-rate diagonals (under the logos)
+  geom_abline(slope = -1, intercept = pr_levels, color = "#cfcfcf", linewidth = 0.5) +
+  geom_hline(yintercept = mean(pass_rates$xpr), color = "black",
+             linetype = "dashed", alpha = 0.5) +
+  geom_vline(xintercept = 0, color = "black",
+             linetype = "dashed", alpha = 0.5) +
+  # pass-rate value labels + "Pass Rate" tags, drawn UNDER the logos
+  geom_label(data = lab_df, aes(x = x, y = y, label = paste0(round(c*100), "%")),
+             inherit.aes = FALSE, fill = "white", label.size = 0,
+             color = "#555555", size = 3) +
+  geom_text(data = tag_df, aes(x = x, y = y, label = "Pass Rate"),
+            inherit.aes = FALSE, hjust = 0, color = "#555555", size = 4.5, fontface = 2) +
+
+  nflplotR::geom_nfl_logos(aes(team_abbr = posteam), width = 0.07, alpha = 1.0) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                     breaks = scales::pretty_breaks(n = 8)) +
+  scale_x_continuous(labels = function(x) paste0(ifelse(x > 0, "+", ""), sprintf("%.0f%%", x*100)),
+                     breaks = scales::pretty_breaks(n = 8)) +
+  coord_cartesian(xlim = c(-xlim_val, xlim_val), ylim = c(y_lo_lim, y_hi_lim)) +
+  # quadrant labels pinned to the panel corners, aligned inward so they
+  # never get clipped by a team sitting at the edge
+  annotate("text", x = -Inf, y =  Inf, hjust = -0.04, vjust =  1.4,
+           label = "Refusing to Pass", fontface = 2, size = 5) +
+  annotate("text", x =  Inf, y =  Inf, hjust =  1.04, vjust =  1.4,
+           label = "Passing in Passing Game Scripts", fontface = 2, size = 5) +
+  annotate("text", x = -Inf, y = -Inf, hjust = -0.04, vjust = -0.4,
+           label = "Dictating the Run", fontface = 2, size = 5) +
+  annotate("text", x =  Inf, y = -Inf, hjust =  1.04, vjust = -0.4,
+           label = "Dictacting the Pass", fontface = 2, size = 5) +
+  ggplot2::labs(
+    x = "Pass Rate Over Expected (PROE)",
+    y = "Expected Pass Rate",
+    caption = "Figure: @PatKerrane | Data: @nflfastR",
+    title = paste0(WK_LABEL, " PROE vs. Expected Pass Rate")
+  ) +
+  ggplot2::theme_bw() +
+  ggplot2::theme(
+    plot.title = ggplot2::element_text(size = 14, hjust = 0.5, face = "bold"),
+    plot.subtitle = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold",
+                                          colour = "black"),
+    panel.grid.minor = ggplot2::element_blank()
+  )
+
+ggsave(file.path(OUT_DIR, "pr_vs_xpr.png"), plot = base_plot,
+       width = 11, height = 8.5, dpi = 300)
+
+# =====================================================================
+# CIRCLE EACH TEAM
+# =====================================================================
+TEAM_NAMES <- c(
+  ARI = "Arizona Cardinals",   ATL = "Atlanta Falcons",
+  BAL = "Baltimore Ravens",    BUF = "Buffalo Bills",
+  CAR = "Carolina Panthers",   CHI = "Chicago Bears",
+  CIN = "Cincinnati Bengals",  CLE = "Cleveland Browns",
+  DAL = "Dallas Cowboys",      DEN = "Denver Broncos",
+  DET = "Detroit Lions",       GB  = "Green Bay Packers",
+  HOU = "Houston Texans",      IND = "Indianapolis Colts",
+  JAX = "Jacksonville Jaguars",KC  = "Kansas City Chiefs",
+  LA  = "Los Angeles Rams",    LAC = "Los Angeles Chargers",
+  LV  = "Las Vegas Raiders",   MIA = "Miami Dolphins",
+  MIN = "Minnesota Vikings",   NE  = "New England Patriots",
+  NO  = "New Orleans Saints",  NYG = "New York Giants",
+  NYJ = "New York Jets",       PHI = "Philadelphia Eagles",
+  PIT = "Pittsburgh Steelers", SEA = "Seattle Seahawks",
+  SF  = "San Francisco 49ers", TB  = "Tampa Bay Buccaneers",
+  TEN = "Tennessee Titans",    WAS = "Washington Commanders",
+  LAR = "Los Angeles Rams"
+)
+
+slugify <- function(x) {
+  x <- tolower(x); x <- gsub("[^a-z0-9]+", "_", x); gsub("^_|_$", "", x)
+}
+
+for (i in seq_len(nrow(pass_rates))) {
+  team <- pass_rates$posteam[i]
+  full <- if (!is.na(TEAM_NAMES[team])) TEAM_NAMES[[team]] else team
+  full <- sub("^.* ", "", full)   # drop city, keep nickname only
+  one  <- pass_rates[i, , drop = FALSE]
+
+  proe_r    <- round(one$proe  * 100)
+  proe1_r   <- round(one$proe1 * 100)
+  proe_str  <- if (proe_r  == 0) "0%" else sprintf("%+.0f%%", proe_r)
+  proe1_str <- if (isTRUE(proe1_r == 0)) "0%" else sprintf("%+.0f%%", proe1_r)
+  sub <- sprintf(paste0("%s: Pass Rate %.0f%%, Expected Pass Rate %.0f%%, ",
+                        "PROE on 1st-and-10 %s, PROE %s"),
+                 full, one$pr * 100, one$xpr * 100, proe1_str, proe_str)
+
+  p <- base_plot +
+    geom_point(data = one, aes(x = proe, y = xpr),
+               shape = 21, fill = NA, colour = "black",
+               size = CIRCLE_SIZE, stroke = CIRCLE_STROKE) +
+    labs(subtitle = sub)
+
+  ggsave(file.path(OUT_DIR, paste0(slugify(full), ".png")),
+         plot = p, width = 11, height = 8.5, dpi = 300)
+  message("wrote ", full)
+}
+
+message("done — Week ", wk, " charts in ", OUT_DIR, "/")
+
+# open the output folder
+if (.Platform$OS.type == "windows") {
+  shell.exec(normalizePath(OUT_DIR))
+} else {
+  system(paste("open", shQuote(normalizePath(OUT_DIR))))
+}
