@@ -29,17 +29,42 @@ from matplotlib.transforms import IdentityTransform
 # CONFIG
 # ---------------------------------------------------------------------------
 # command line: py qb_epa_full.py [--year 2026] [--minplays 10]
+#   --year accepts one season, a range, or a list:  2026 | 2022-2026 | 2022,2024
 _ap = argparse.ArgumentParser()
-_ap.add_argument("--year", type=int, default=2026, help="season (default 2026)")
+_ap.add_argument("--year", type=str, default="2026",
+                 help="season(s): 2026, or a range/list like 2022-2026 or 2022,2024")
 _ap.add_argument("--minplays", type=int, default=10, help="min plays/dropbacks to qualify (default 10)")
 _args = _ap.parse_args()
-SEASON   = _args.year
-MINPLAYS = _args.minplays
-DBS      = round(0.8 * MINPLAYS)   # dropback floor = 80% of plays
-# output -> Walkthrough 26 / EPA Circled QBs  (absolute, so it doesn't depend on where you run it)
-_home    = os.environ.get("USERPROFILE") or os.path.expanduser("~")
-OUTPUT   = Path(_home) / "Documents" / "Walkthrough 26" / "EPA Circled QBs"
-CREDIT   = "Figure: @PatKerrane  |  Data: @nflfastR"
+
+def _parse_years(tok):
+    out = []
+    for part in str(tok).replace(",", " ").split():
+        if "-" in part:
+            a, b = part.split("-")
+            out.extend(range(int(a), int(b) + 1))
+        else:
+            out.append(int(part))
+    return sorted(set(out))
+
+def _years_label(ys, sep):
+    if len(ys) == 1:
+        return str(ys[0])
+    if ys == list(range(ys[0], ys[-1] + 1)):        # consecutive -> a range
+        return f"{ys[0]}-{ys[-1]}"
+    return sep.join(str(y) for y in ys)
+
+SEASONS   = _parse_years(_args.year)
+YR_LABEL  = _years_label(SEASONS, ", ")   # for the title
+YR_FOLDER = _years_label(SEASONS, "_")    # for the folder name
+MINPLAYS  = _args.minplays
+DBS       = round(0.8 * MINPLAYS)   # dropback floor = 80% of plays
+_home     = os.environ.get("USERPROFILE") or os.path.expanduser("~")
+# single season keeps the usual folder; multi-season gets its own
+if len(SEASONS) > 1:
+    OUTPUT = Path(_home) / "Documents" / "Walkthrough 26" / "Multi-Season EPA Circled QBs" / YR_FOLDER
+else:
+    OUTPUT = Path(_home) / "Documents" / "Walkthrough 26" / "EPA Circled QBs"
+CREDIT    = "Figure: @PatKerrane  |  Data: @nflfastR"
 
 # Data arrays — filled by load_data() from the live pull.
 NAMES, SR, EPAG, EPA_PLAY, CPOE, COL, IDS = [], None, None, None, None, [], []
@@ -53,7 +78,7 @@ def load_data():
     global NAMES, SR, EPAG, EPA_PLAY, CPOE, COL, IDS, FULL_BY_ID, RUSH_EPA_G
     import nflreadpy as nfl
 
-    pbp = nfl.load_pbp([SEASON]).to_pandas()
+    pbp = nfl.load_pbp(SEASONS).to_pandas()
     # exclude QB kneels and spikes so EPA/SR match RBSDM
     d = pbp[pbp["epa"].notna() & (pbp["qb_kneel"] != 1) & (pbp["qb_spike"] != 1)]
 
@@ -188,7 +213,7 @@ def new_figure(subtitle=None, note=None):
     fig.patch.set_facecolor("white")
     ax.set_facecolor("white")
     texts, sizes = draw_base(ax)
-    fig.text(0.5, 0.965, f"{SEASON} EPA per Game and Success Rate",
+    fig.text(0.5, 0.965, f"{YR_LABEL} EPA per Game and Success Rate",
              ha="center", va="center", fontsize=20, fontweight="bold")
     if subtitle:
         fig.text(0.5, 0.937, subtitle, ha="center", va="center",
