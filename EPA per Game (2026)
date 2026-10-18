@@ -8,8 +8,8 @@ options(scipen = 9999)
 
 pbp <- load_pbp(2026)
 
-minplays <- 10
-dbs <- 10
+minplays <- 50
+dbs <- 40
 
 
 qbs <- pbp %>%
