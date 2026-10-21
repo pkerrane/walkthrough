@@ -4,7 +4,7 @@ cd "$env:USERPROFILE\Documents\Walkthrough 26"; curl -o qb_epa_full.py https://r
 
 curl -o qb_epa_weekly.py https://raw.githubusercontent.com/pkerrane/walkthrough/refs/heads/main/qb_epa_weekly.py; py qb_epa_weekly.py 6 --year 2026 --minplays 10
 
-curl -o qb_epa_weekly.py https://raw.githubusercontent.com/pkerrane/walkthrough/refs/heads/main/qb_epa_weekly.py; py qb_epa_weeks.py 1-3 --year 2026
+curl -o qb_epa_weekly.py https://raw.githubusercontent.com/pkerrane/walkthrough/refs/heads/main/qb_epa_weekly.py; py qb_epa_weeks.py 5-6 --year 2026
 
 # weeks 1, 2 ,3, and 5 would be 1-3 5
 
