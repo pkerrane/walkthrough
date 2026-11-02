@@ -112,6 +112,10 @@ build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
   long$wk <- factor(long$wk_num, levels = week, labels = paste0(opp, "\nWk", week))
   pos <- position_dodge2(width = 0.8, padding = 0.12, preserve = "single")
 
+  # cap bar heights at the axis so an outlier (e.g. -34%) fills to the edge
+  # instead of spilling past it into the x-axis labels
+  long$value_plot <- pmin(pmax(long$value, ylims[1]), ylims[2])
+
   # labels: OUTSIDE the bar, colored to match each bar (grey series -> grey,
   # team series -> team color), like the "against" chart; or white & inside.
   if (outside_labels) {
@@ -120,10 +124,16 @@ build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
     # opposite signs); nudge each label above/below its bar via lab_y.
     lab_df <- subset(long, !is.na(value))
     off <- 0.05 * (ylims[2] - ylims[1])
-    lab_df$lab_y <- lab_df$value + ifelse(lab_df$value >= 0, off, -off)
+    # out-of-range bars: label sits INSIDE the capped edge, white; shows true value
+    lab_df$oor   <- lab_df$value < ylims[1] | lab_df$value > ylims[2]
+    lab_df$lab_y <- ifelse(
+      lab_df$oor,
+      ifelse(lab_df$value > ylims[2], ylims[2] - off, ylims[1] + off),  # inside the edge
+      lab_df$value + ifelse(lab_df$value >= 0, off, -off))              # outside the bar
+    lab_df$lab_c <- ifelse(lab_df$oor, "white", lab_df$lab_col)
     labs_layer <- list(
       geom_text(data = lab_df,
-                aes(y = lab_y, label = paste0(round(value), "%"), color = lab_col),
+                aes(y = lab_y, label = paste0(round(value), "%"), color = lab_c),
                 position = pos, vjust = 0.5, fontface = "bold", size = 3.8,
                 show.legend = FALSE),
       scale_color_identity()
@@ -141,7 +151,7 @@ build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
 
   ggplot(long, aes(wk, value, fill = series, group = series)) +
     { if (ylims[1] < 0) geom_hline(yintercept = 0, color = "black", linewidth = 0.6) } +
-    geom_col(width = 0.82, position = pos, na.rm = TRUE) +
+    geom_col(aes(y = value_plot), width = 0.82, position = pos, na.rm = TRUE) +
     labs_layer +
     scale_fill_manual(values = setNames(
       ifelse(c(grey_name, color_name) == team_series, tcol, "#3F3F3F"),
