@@ -11,7 +11,7 @@ library(dplyr)
 library(nflfastR)
 library(nflplotR)
 
-wk <- 7                 # <-- set the week you want, then run
+wk <- 8                 # <-- set the week you want, then run
 
 # =====================================================================
 # DATA  (RBSDM-matched: add_xpass once on full pbp, then filter to the week)
@@ -19,7 +19,7 @@ wk <- 7                 # <-- set the week you want, then run
 pbp <- nflfastR::load_pbp(seasons = 2026)
 px  <- add_xpass(pbp)
 
-pass_rates <- px %>%
+pass_rates_w <- px %>%
   filter(week == wk) %>%
   group_by(posteam) %>%
   summarize(proe = mean(pass_oe, na.rm = TRUE), xpr = mean(xpass, na.rm = TRUE)) %>%
@@ -33,22 +33,22 @@ proe1 <- px %>%
   mutate(proe1 = proe1/100) %>%
   filter(!is.na(posteam))
 
-pass_rates <- dplyr::left_join(pass_rates, proe1, by = "posteam")
+pass_rates_w <- dplyr::left_join(pass_rates_w, proe1, by = "posteam")
 
 colnms = c("proe", "xpr")
-pass_rates$pr <- rowSums(pass_rates[, colnms])
-pass_rates <- dplyr::relocate(pass_rates, pr, .after = xpr)   # posteam, proe, xpr, pr, proe1
+pass_rates_w$pr <- rowSums(pass_rates_w[, colnms])
+pass_rates_w <- dplyr::relocate(pass_rates_w, pr, .after = xpr)   # posteam, proe, xpr, pr, proe1
 
-y_high <- max(pass_rates$xpr); y_low <- min(pass_rates$xpr)
+y_high <- max(pass_rates_w$xpr); y_low <- min(pass_rates_w$xpr)
 
 # symmetric x-range around PROE = 0 (equal on both sides, + room for logos)
-xlim_val <- max(abs(pass_rates$proe), na.rm = TRUE) + 0.01
+xlim_val <- max(abs(pass_rates_w$proe), na.rm = TRUE) + 0.01
 y_lo_lim <- y_low  - 0.02
 y_hi_lim <- y_high + 0.02
 
 # constant pass-rate diagonals: Pass Rate = PROE + Expected -> slope -1, intercept c
 pr_levels <- seq(0.45, 0.80, 0.05)
-lab_b  <- mean(pass_rates$xpr) - 0.05
+lab_b  <- mean(pass_rates_w$xpr) - 0.05
 lab_df <- data.frame(c = pr_levels)
 lab_df$x <- (lab_df$c - lab_b) / 2
 lab_df$y <- (lab_df$c + lab_b) / 2
@@ -62,11 +62,11 @@ tag_df$y <- tag_df$c - tag_df$x
 # CHART
 # =====================================================================
 base_plot <-
-  ggplot2::ggplot(pass_rates, aes(x = proe, y = xpr)) +
+  ggplot2::ggplot(pass_rates_w, aes(x = proe, y = xpr)) +
 
   geom_abline(slope = -1, intercept = pr_levels, color = "#cfcfcf", linewidth = 0.5) +
 
-  geom_hline(yintercept = mean(pass_rates$xpr), color = "black",
+  geom_hline(yintercept = mean(pass_rates_w$xpr), color = "black",
              linetype = "dashed", alpha = 0.5) +
   geom_vline(xintercept = 0, color = "black",
              linetype = "dashed", alpha = 0.5) +
@@ -112,4 +112,4 @@ base_plot <-
 print(base_plot)
 
 # copy the table to the clipboard for your spreadsheet
-clipr::write_clip(pass_rates)
+clipr::write_clip(pass_rates_w)
