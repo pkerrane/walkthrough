@@ -112,9 +112,11 @@ build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
   long$wk <- factor(long$wk_num, levels = week, labels = paste0(opp, "\nWk", week))
   pos <- position_dodge2(width = 0.8, padding = 0.12, preserve = "single")
 
-  # cap bar heights at the axis so an outlier (e.g. -34%) fills to the edge
-  # instead of spilling past it into the x-axis labels
-  long$value_plot <- pmin(pmax(long$value, ylims[1]), ylims[2])
+  # out-of-range bars run to the full edge of the plot, including ggplot's 5%
+  # axis padding (-33/+33 on the PROE chart), rather than stopping at the axis limit
+  pad <- 0.05 * (ylims[2] - ylims[1])
+  long$value_plot <- ifelse(long$value < ylims[1], ylims[1] - pad,
+                     ifelse(long$value > ylims[2], ylims[2] + pad, long$value))
 
   # labels: OUTSIDE the bar, colored to match each bar (grey series -> grey,
   # team series -> team color), like the "against" chart; or white & inside.
