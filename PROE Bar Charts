@@ -112,12 +112,20 @@ build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
   long$wk <- factor(long$wk_num, levels = week, labels = paste0(opp, "\nWk", week))
   pos <- position_dodge2(width = 0.8, padding = 0.12, preserve = "single")
 
-  # out-of-range bars: low outliers run down through the x-axis labels to the
-  # bottom of the image (drawn to -45 on the PROE chart, past the image edge); high outliers stop at the top
-  # of the plot (+33) so they stay clear of the legend
+  # low bars keep their TRUE length, so -34 ends at -34; anything past the bottom
+  # of the image (about -40 on the PROE chart) simply runs off the edge.
+  # high bars stop at the top of the plot (+33) to stay clear of the legend.
   rng <- ylims[2] - ylims[1]
-  long$value_plot <- ifelse(long$value < ylims[1], ylims[1] - rng / 4,
-                     ifelse(long$value > ylims[2], ylims[2] + 0.05 * rng, long$value))
+  long$value_plot <- pmin(long$value, ylims[2] + 0.05 * rng)
+
+  # opponent/week label turns white only when BOTH bars reach past the whole
+  # label (about -39 on the PROE chart); otherwise white would vanish on the background
+  cover_at <- ylims[1] - 0.15 * rng
+  covered <- vapply(week, function(w) {
+    v <- long$value[long$wk_num == w]
+    all(!is.na(v) & v <= cover_at)
+  }, logical(1))
+  axis_cols <- ifelse(covered, "white", "grey30")
 
   # labels: OUTSIDE the bar, colored to match each bar (grey series -> grey,
   # team series -> team color), like the "against" chart; or white & inside.
@@ -163,7 +171,8 @@ build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
     scale_x_discrete(drop = FALSE, expand = expansion(add = 0.6)) +
     coord_cartesian(ylim = ylims, clip = "off") +
     labs(title = title) +
-    base_theme
+    base_theme +
+    theme(axis.text.x = suppressWarnings(element_text(colour = axis_cols)))
 }
 
 # build the "against" combo chart: team-color PROE-against bars + dark-grey Pass-Rate line
