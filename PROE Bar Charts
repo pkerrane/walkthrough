@@ -118,15 +118,6 @@ build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
   rng <- ylims[2] - ylims[1]
   long$value_plot <- pmin(long$value, ylims[2] + 0.05 * rng)
 
-  # opponent/week label turns white only when BOTH bars reach past the whole
-  # label (about -39 on the PROE chart); otherwise white would vanish on the background
-  cover_at <- ylims[1] - 0.15 * rng
-  covered <- vapply(week, function(w) {
-    v <- long$value[long$wk_num == w]
-    all(!is.na(v) & v <= cover_at)
-  }, logical(1))
-  axis_cols <- ifelse(covered, "white", "grey30")
-
   # labels: OUTSIDE the bar, colored to match each bar (grey series -> grey,
   # team series -> team color), like the "against" chart; or white & inside.
   if (outside_labels) {
@@ -171,14 +162,23 @@ build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
     scale_x_discrete(drop = FALSE, expand = expansion(add = 0.6)) +
     coord_cartesian(ylim = ylims, clip = "off") +
     labs(title = title) +
-    base_theme +
-    theme(axis.text.x = suppressWarnings(element_text(colour = axis_cols)))
+    base_theme
 }
 
 # build the "against" combo chart: team-color PROE-against bars + dark-grey Pass-Rate line
 build_against <- function(week, opp, proea, pra, tcol, title) {
   df <- tibble(wk_num = week, proea = proea, pra = pra)
   df$wk <- factor(df$wk_num, levels = week, labels = paste0(opp, "\nWk", week))
+
+  # bars past the -25 axis limit carry their label inside the bar, in white
+  df$oor <- !is.na(df$proea) & df$proea < -25
+
+  # a Pass Rate low point has the line rising away on each side, so its label
+  # goes below the point; every other label stays above
+  prev_pr <- dplyr::lag(df$pra); next_pr <- dplyr::lead(df$pra)
+  df$pr_low <- (is.na(prev_pr) | prev_pr > df$pra) &
+               (is.na(next_pr) | next_pr > df$pra) &
+               (!is.na(prev_pr) | !is.na(next_pr)) & !is.na(df$pra)
 
   ggplot(df, aes(x = wk)) +
     geom_hline(yintercept = 0, color = "black", linewidth = 0.6) +
@@ -188,11 +188,15 @@ build_against <- function(week, opp, proea, pra, tcol, title) {
     # PROE bar labels: OUTSIDE the bar in team color (readable even on tiny bars)
     geom_text(data = subset(df, proea >= 0), aes(y = proea, label = paste0(round(proea), "%")),
               vjust = -0.6, color = tcol, fontface = "bold", size = 3.5, na.rm = TRUE) +
-    geom_text(data = subset(df, proea < 0), aes(y = proea, label = paste0(round(proea), "%")),
+    geom_text(data = subset(df, proea < 0 & !oor), aes(y = proea, label = paste0(round(proea), "%")),
               vjust = 1.5, color = tcol, fontface = "bold", size = 3.5, na.rm = TRUE) +
-    # Pass Rate line labels: dark grey, above the points
-    geom_text(aes(y = pra, label = paste0(round(pra), "%")),
+    geom_text(data = subset(df, oor), aes(y = -18.75, label = paste0(round(proea), "%")),
+              vjust = 0.5, color = "white", fontface = "bold", size = 3.5, na.rm = TRUE) +
+    # Pass Rate line labels: dark grey, above the points (below at low points)
+    geom_text(data = subset(df, !pr_low), aes(y = pra, label = paste0(round(pra), "%")),
               vjust = -0.9, color = "#3F3F3F", fontface = "bold", size = 3.5, na.rm = TRUE) +
+    geom_text(data = subset(df, pr_low), aes(y = pra, label = paste0(round(pra), "%")),
+              vjust = 1.9, color = "#3F3F3F", fontface = "bold", size = 3.5, na.rm = TRUE) +
     scale_fill_manual(name = NULL, values = c("PROE" = tcol)) +
     scale_color_manual(name = NULL, values = c("Pass Rate" = "#3F3F3F")) +
     scale_y_continuous(breaks = seq(-25, 100, 25), labels = function(z) paste0(z, "%")) +
