@@ -91,13 +91,16 @@ def load_data():
     d = d.copy()
     # rushing EPA: designed runs (rush==1) + scrambles (qb_scramble==1) count as rushing
     d["_rush_epa"] = np.where((d["rush"] == 1) | (d["qb_scramble"] == 1), d["qb_epa"], 0.0)
+    # success = qb_epa > 0 (matches RBSDM; nflfastR's "success" column uses epa,
+    # which charges the QB for e.g. a receiver's fumble after the catch)
+    d["_qb_success"] = (d["qb_epa"] > 0).astype(float)
 
     qbs = (
         d.groupby(["id", "name"], dropna=True)
          .agg(
              epa=("qb_epa", "mean"),          # EPA per play
              cpoe=("cpoe", "mean"),
-             sr=("success", "mean"),
+             sr=("_qb_success", "mean"),
              g=("game_id", "nunique"),
              n_dropbacks=("pass", "sum"),
              n_plays=("epa", "size"),         # n() = rows in the group
