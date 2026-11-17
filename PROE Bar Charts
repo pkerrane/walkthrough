@@ -133,6 +133,16 @@ build <- function(week, opp, grey_vals, color_vals, grey_name, color_name,
       ifelse(lab_df$value > ylims[2], ylims[2] - off, ylims[1] + off),  # inside the edge
       lab_df$value + ifelse(lab_df$value >= 0, off, -off))              # outside the bar
     lab_df$lab_c <- ifelse(lab_df$oor, "white", lab_df$lab_col)
+    # partner bar in an out-of-range week: label also goes white, INSIDE its own
+    # bar end (lined up with the out-of-range label when the bar reaches the edge).
+    # Skipped if the bar is too short to hold a label, since white would vanish.
+    oor_wk  <- lab_df$wk_num %in% lab_df$wk_num[lab_df$oor]
+    partner <- oor_wk & !lab_df$oor & abs(lab_df$value) >= 2 * off
+    lab_df$lab_y[partner] <- ifelse(
+      lab_df$value[partner] < 0,
+      pmax(lab_df$value[partner], ylims[1]) + off,
+      pmin(lab_df$value[partner], ylims[2]) - off)
+    lab_df$lab_c[partner] <- "white"
     labs_layer <- list(
       geom_text(data = lab_df,
                 aes(y = lab_y, label = paste0(round(value), "%"), color = lab_c),
