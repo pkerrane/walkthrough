@@ -45,15 +45,15 @@ dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
 # =====================================================================
 pbp <- nflfastR::load_pbp(seasons = YEAR)
 
-# expected pass rate computed ONCE on the full play-by-play, THEN filtered.
-# (Filtering before add_xpass() leaves most plays with no expected value and
-#  produces bad PROE numbers -- that was the 1st-and-10 bug.)
-px <- add_xpass(pbp)
+# expected pass rate: use the xpass / pass_oe columns that come WITH the
+# nflverse play-by-play (these match RBSDM). Do NOT rerun add_xpass() --
+# the locally installed model gives expected pass rates 2-5 points too high.
+px <- pbp
 
 pass_rates <- px %>%
   filter(week %in% WEEKS) %>%
   group_by(posteam) %>%
-  summarize(proe = mean(pass_oe, na.rm = TRUE), xpr = mean(xpass, na.rm = TRUE)) %>%
+  summarize(proe = mean(pass_oe, na.rm = TRUE), xpr = mean(xpass[!is.na(pass_oe)])) %>%
   mutate(proe = proe/100) %>%
   filter(!is.na(posteam))
 
