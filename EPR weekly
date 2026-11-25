@@ -14,15 +14,18 @@ library(nflplotR)
 wk <- 11                 # <-- set the week you want, then run
 
 # =====================================================================
-# DATA  (RBSDM-matched: add_xpass once on full pbp, then filter to the week)
+# DATA  (RBSDM-matched: nflverse xpass/pass_oe columns, then filter to the week)
 # =====================================================================
 pbp <- nflfastR::load_pbp(seasons = 2026)
-px  <- add_xpass(pbp)
+# expected pass rate: use the xpass / pass_oe columns that come WITH the
+# nflverse play-by-play (these match RBSDM). Do NOT rerun add_xpass() --
+# the locally installed model gives expected pass rates 2-5 points too high.
+px <- pbp
 
 pass_rates_w <- px %>%
   filter(week == wk) %>%
   group_by(posteam) %>%
-  summarize(proe = mean(pass_oe, na.rm = TRUE), xpr = mean(xpass, na.rm = TRUE)) %>%
+  summarize(proe = mean(pass_oe, na.rm = TRUE), xpr = mean(xpass[!is.na(pass_oe)])) %>%
   mutate(proe = proe/100) %>%
   filter(!is.na(posteam))
 
